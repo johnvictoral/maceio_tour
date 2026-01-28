@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="text-center mb-4 mt-5">
+      <h1 class="h2">Formulário de Reserva de Transfer</h1>
+      <p class="lead">Você está reservando: <strong>{{ transfer.titulo }}</strong>.</p>
+    </div>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <form method="POST">
+          {% csrf_token %}
+
+          <h5 class="mb-3">Seus Dados Pessoais</h5>
+          <div class="row">
+              <div class="col-md-6 mb-3">
+                  <label for="{{ cliente_form.nome.id_for_label }}" class="form-label">{{ cliente_form.nome.label }}</label>
+                  {{ cliente_form.nome }}
+              </div>
+              <div class="col-md-6 mb-3">
+                  <label for="{{ cliente_form.sobrenome.id_for_label }}" class="form-label">{{ cliente_form.sobrenome.label }}</label>
+                  {{ cliente_form.sobrenome }}
+              </div>
+          </div>
+          <div class="mb-3">
+              <label for="{{ cliente_form.email.id_for_label }}" class="form-label">{{ cliente_form.email.label }}</label>
+              {{ cliente_form.email }}
+          </div>
+          <div class="mb-3">
+              <label for="{{ cliente_form.telefone.id_for_label }}" class="form-label">{{ cliente_form.telefone.label }}</label>
+              {{ cliente_form.telefone }}
+          </div>
+          <hr class="my-4">
+
+          <h5 class="mb-3">Detalhes da Viagem</h5>
+          {% for field in reserva_form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {{ field }}
+            </div>
+          {% endfor %}
+          
+          <div class="d-grid gap-2 mt-4">
+            <button type="submit" class="btn btn-brand-teal btn-lg">Confirmar Reserva</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

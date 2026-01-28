@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    /* Estilos da Sidebar (iguais ao blog) */
+    .sidebar-widget {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+    
+    .price-tag {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #117864;
+    }
+
+    .form-section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #eee;
+    }
+</style>
+
+<div class="bg-light py-5">
+    <div class="container text-center">
+        <span class="badge bg-success rounded-pill px-3 py-2 mb-3">Reserva Online</span>
+        <h1 class="display-4 fw-bold">Confirme seu Passeio</h1>
+        <p class="text-muted lead">Você está a poucos passos de conhecer {{ praia.nome }}.</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row">
+        
+        <div class="col-lg-8">
+            
+            <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
+                {% if praia.imagem %}
+                <img src="{{ praia.imagem.url }}" class="w-100" style="height: 300px; object-fit: cover;" alt="{{ praia.nome }}">
+                {% endif %}
+                <div class="card-body p-4">
+                    <h3 class="fw-bold mb-3">{{ praia.nome }}</h3>
+                    <p class="text-muted mb-0">{{ praia.descricao_curta }}</p>
+                    <div class="mt-3">
+                         {{ praia.descricao_completa|linebreaks }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <h2 class="fw-bold mb-4">Preencha seus dados</h2>
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <div class="mb-5">
+                            <h5 class="form-section-title"><i class="bi bi-person-circle me-2"></i>Responsável pela Reserva</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-muted">Nome</label>
+                                    {{ cliente_form.nome }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-muted">Sobrenome</label>
+                                    {{ cliente_form.sobrenome }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-muted">E-mail</label>
+                                    {{ cliente_form.email }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-muted">WhatsApp / Telefone</label>
+                                    {{ cliente_form.telefone }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h5 class="form-section-title"><i class="bi bi-calendar-check me-2"></i>Detalhes da Viagem</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-muted">Data do Passeio</label>
+                                    {{ reserva_form.data_agendamento }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-muted">Quantas Pessoas?</label>
+                                    {{ reserva_form.numero_passageiros }}
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold small text-muted">Onde devemos te buscar? (Hotel/Pousada)</label>
+                                    {{ reserva_form.local_partida }}
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold small text-muted">Observações (Opcional)</label>
+                                    {{ reserva_form.informacoes_voo }}
+                                    <div class="form-text">Tem crianças? Alguma necessidade especial? Conte pra gente.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-5">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold shadow">
+                                Confirmar Solicitação de Reserva
+                            </button>
+                            <p class="text-center text-muted small mt-3">
+                                <i class="bi bi-lock-fill"></i> Seus dados estão seguros. Entraremos em contato para confirmar o pagamento.
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mt-5 mt-lg-0">
+            <div style="position: sticky; top: 100px;">
+                
+                <div class="sidebar-widget text-center">
+                    <p class="text-muted text-uppercase small fw-bold mb-2">Valor por Pessoa (Estimado)</p>
+                    
+                    <div class="price-tag mb-3">
+                        {% if praia.preco %}
+                            R$ {{ praia.preco|floatformat:0 }}
+                        {% else %}
+                            <span class="fs-3">A Consultar</span>
+                        {% endif %}
+                    </div>
+                    
+                    <ul class="list-unstyled text-start small text-muted mb-4 bg-light p-3 rounded-3">
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Transporte Climatizado</li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Motorista Guia Credenciado</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Buscamos no Hotel</li>
+                    </ul>
+
+                    <div class="d-grid">
+                        <a href="https://wa.me/5582999999999" target="_blank" class="btn btn-outline-success rounded-pill fw-bold">
+                            <i class="bi bi-whatsapp me-1"></i> Dúvidas? Fale Agora
+                        </a>
+                    </div>
+                </div>
+
+                <div class="sidebar-widget">
+                    <h5 class="fw-bold mb-4 pb-2 border-bottom">Outros Destinos</h5>
+                    {% for sugestao in sugestoes %}
+                    <div class="d-flex align-items-center mb-3">
+                        {% if sugestao.imagem %}
+                        <img src="{{ sugestao.imagem.url }}" class="rounded-3 object-fit-cover shadow-sm" width="60" height="60">
+                        {% endif %}
+                        <div class="ms-3">
+                            <h6 class="mb-1 fw-bold">
+                                <a href="{% url 'fazer_reserva_passeio' praia_id=sugestao.id %}" class="text-decoration-none text-dark stretched-link">
+                                    {{ sugestao.nome }}
+                                </a>
+                            </h6>
+                            <small class="text-muted">Alagoas</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

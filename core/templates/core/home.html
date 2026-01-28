@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+<style>
+    /* Estilos Gerais (Hero, Transfers, Cards) */
+    .hero-img { height: 85vh; object-fit: cover; filter: none !important; }
+    #myCarousel, .carousel-overlay { background: none !important; box-shadow: none !important; }
+    
+    .card-hover { transition: all 0.3s ease; border: none; overflow: hidden; }
+    .card-hover:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important; }
+    .card-hover:hover .card-img-zoom { transform: scale(1.05); }
+    .card-img-zoom { transition: transform 0.5s ease; }
+    
+    .price-badge { background: rgba(255,255,255,0.95); padding: 8px 16px; border-radius: 50px; position: absolute; bottom: 15px; right: 15px; font-weight: bold; }
+
+    /* Estilos do Transfer */
+    .transfer-card { border: none; border-radius: 16px; transition: all 0.3s; overflow: hidden; }
+    .transfer-card:hover { transform: translateY(-8px); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+    .transfer-img-wrapper { height: 180px; overflow: hidden; position: relative; }
+    .transfer-img-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+    .transfer-card:hover img { transform: scale(1.1); }
+    .route-badge { position: absolute; bottom: 10px; left: 10px; background: rgba(255,255,255,0.95); padding: 5px 12px; border-radius: 30px; font-size: 0.75rem; font-weight: 800; display: flex; align-items: center; gap: 5px; }
+    .route-visual { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; color: #6c757d; font-size: 0.85rem; }
+    .route-dots { flex-grow: 1; height: 1px; background-image: linear-gradient(to right, #ccc 33%, rgba(255,255,255,0) 0%); background-size: 6px 1px; margin: 0 10px; position: relative; }
+    .route-dots::after { content: '✈️'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #fff; padding: 0 5px; }
+    .btn-transfer { background-color: #1e293b; color: #fff; border-radius: 8px; font-weight: 600; }
+    .btn-transfer:hover { background-color: #0f172a; color: #fff; }
+
+    /* ESTILOS ESPECÍFICOS DOS DEPOIMENTOS */
+    .testimonial-card {
+        background: #fff;
+        border-radius: 20px;
+        height: 100%; /* Garante altura igual */
+    }
+    .swiper-slide {
+        height: auto; /* Importante para o card esticar */
+        display: flex; /* Garante que o conteúdo preencha */
+    }
+    .swiper-pagination-bullet-active { background-color: var(--bs-primary) !important; }
+    
+    .btn-whatsapp-float { position: fixed; bottom: 30px; right: 30px; background: #25d366; color: white; border-radius: 50%; width: 60px; height: 60px; font-size: 30px; display: flex; align-items: center; justify-content: center; z-index: 1000; transition: transform 0.3s; }
+    .btn-whatsapp-float:hover { transform: scale(1.1); color: white; }
+</style>
+
+<header class="position-relative">
+  <div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+    <div class="carousel-indicators">
+      {% for imagem in imagens_carrossel %}
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ forloop.counter0 }}" class="{% if forloop.first %}active{% endif %}"></button>
+      {% endfor %}
+    </div>
+    <div class="carousel-inner">
+      {% for imagem in imagens_carrossel %}
+        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+            {% if imagem.praia_link %}
+                <a href="{% url 'detalhe_praia' slug=imagem.praia_link.slug %}"><img src="{{ imagem.imagem.url }}" class="d-block w-100 hero-img"></a>
+            {% elif imagem.transfer_link %}
+                <a href="{% url 'detalhe_transfer' slug=imagem.transfer_link.slug %}"><img src="{{ imagem.imagem.url }}" class="d-block w-100 hero-img"></a>
+            {% else %}
+                <img src="{{ imagem.imagem.url }}" class="d-block w-100 hero-img">
+            {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+  </div>
+</header>
+
+<section id="passeios" class="py-5 bg-white">
+  <div class="container py-4">
+    <div class="row mb-5 align-items-end">
+        <div class="col-md-8">
+            <h6 class="text-primary fw-bold text-uppercase ls-2">Destinos Incríveis</h6>
+            <h2 class="fw-bold display-5">Explore Alagoas</h2>
+        </div>
+        <div class="col-md-4 text-md-end"><p class="text-muted">As praias mais cristalinas do Brasil esperam por você.</p></div>
+    </div>
+    <div class="row g-4">
+      {% for praia in praias %}
+        <div class="col-lg-4 col-md-6">
+          <div class="card card-hover h-100 shadow-sm rounded-4 position-relative">
+            <div class="overflow-hidden position-relative rounded-top-4" style="height: 250px;">
+                <img src="{{ praia.imagem.url }}" class="card-img-top card-img-zoom w-100 h-100" style="object-fit: cover;">
+                <div class="price-badge"><i class="bi bi-geo-alt-fill text-danger"></i> Litoral</div>
+            </div>
+            <div class="card-body p-4 d-flex flex-column">
+              <h4 class="card-title fw-bold mb-2">{{ praia.nome }}</h4>
+              <p class="card-text text-muted small flex-grow-1">{{ praia.descricao_curta|truncatechars:100 }}</p>
+              <div class="d-grid mt-3"><a href="{% url 'detalhe_praia' slug=praia.slug %}" class="btn btn-outline-dark rounded-pill fw-bold">Ver Roteiro</a></div>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-12 text-center py-5"><p class="text-muted">Cadastrando novos passeios...</p></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section id="transfers-section" class="py-5 bg-light position-relative">
+  <div class="position-absolute top-0 start-0 w-100 h-100" style="background-image: url('{% static 'img/pattern.png' %}'); opacity: 0.03; pointer-events: none;"></div>
+  <div class="container py-4 position-relative">
+    <div class="text-center mb-5">
+      <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 mb-3 fw-bold">TRANSPORTE VIP</span>
+      <h2 class="fw-bold display-6">Transfers & Receptivo</h2>
+    </div>
+    <div class="row g-4 justify-content-center">
+      {% for transfer in transfers %}
+        <div class="col-lg-3 col-md-6 d-flex align-items-stretch">
+          <div class="card transfer-card shadow-sm w-100">
+            {% if transfer.mais_vendido %}<div class="position-absolute top-0 end-0 m-3 badge bg-warning text-dark shadow-sm z-2 fw-bold">Popular</div>{% endif %}
+            <div class="transfer-img-wrapper">
+                {% if transfer.imagem %}<img src="{{ transfer.imagem.url }}">{% else %}<div class="bg-secondary w-100 h-100 d-flex align-items-center justify-content-center text-white"><i class="bi bi-car-front fs-1"></i></div>{% endif %}
+                <div class="route-badge">
+                    {% if transfer.direcao == 'ida' %}<i class="bi bi-box-arrow-in-right text-success"></i> Chegada{% elif transfer.direcao == 'volta' %}<i class="bi bi-box-arrow-right text-danger"></i> Saída{% else %}<i class="bi bi-arrow-left-right text-primary"></i> Ida e Volta{% endif %}
+                </div>
+            </div>
+            <div class="card-body p-4 d-flex flex-column">
+              <h5 class="fw-bold text-dark mb-1">{{ transfer.titulo }}</h5>
+              <p class="text-muted small mb-3">{{ transfer.descricao|truncatechars:50 }}</p>
+              <div class="route-visual">
+                  <div class="text-center"><i class="bi bi-airplane-engines fs-5 mb-1 d-block text-secondary"></i><small class="fw-bold" style="font-size: 0.7rem;">ORIGEM</small></div>
+                  <div class="route-dots"></div>
+                  <div class="text-center"><i class="bi bi-building fs-5 mb-1 d-block text-secondary"></i><small class="fw-bold" style="font-size: 0.7rem;">DESTINO</small></div>
+              </div>
+              <div class="transfer-footer mt-auto d-flex align-items-end justify-content-between">
+                  <div><small class="text-muted d-block" style="font-size: 0.75rem;">A partir de</small><span class="fw-bold text-dark fs-4">R$ {{ transfer.valor|floatformat:0 }}</span></div>
+                  <a href="{% url 'detalhe_transfer' slug=transfer.slug %}" class="btn btn-transfer px-3 py-2 shadow-sm">Reservar <i class="bi bi-arrow-right ms-1"></i></a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="py-5 bg-white position-relative">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="text-primary fw-bold text-uppercase ls-2">Feedback</span>
+            <h2 class="display-6 fw-bold">O que nossos clientes dizem</h2>
+            <div class="mx-auto bg-primary mt-3" style="width: 60px; height: 3px;"></div>
+        </div>
+
+        <div class="position-relative px-lg-4">
+            <div class="swiper mySwiper p-2 pb-5">
+                <div class="swiper-wrapper">
+                    {% for depoimento in depoimentos %}
+                    <div class="swiper-slide">
+                        <div class="card border-0 shadow-sm rounded-4 p-4 testimonial-card w-100">
+                            <div class="card-body d-flex flex-column">
+                                <div class="text-primary opacity-25 mb-3"><i class="bi bi-quote fs-1"></i></div>
+                                <p class="card-text text-muted fst-italic mb-4">"{{ depoimento.texto|truncatechars:140 }}"</p>
+                                <div class="d-flex align-items-center mt-auto">
+                                    {% if depoimento.foto %}
+                                        <img src="{{ depoimento.foto.url }}" class="rounded-circle object-fit-cover shadow-sm" width="50" height="50">
+                                    {% else %}
+                                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center text-primary fw-bold" style="width: 50px; height: 50px;">{{ depoimento.nome|slice:":1" }}</div>
+                                    {% endif %}
+                                    <div class="ms-3">
+                                        <h6 class="fw-bold mb-0 text-dark">{{ depoimento.nome }}</h6>
+                                        <small class="text-muted" style="font-size: 0.75rem;">Viajante</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center"><p>Nenhum depoimento.</p></div>
+                    {% endfor %}
+                </div>
+                <div class="swiper-pagination"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="blog-home" class="py-5 bg-light">
+  <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h2 class="fw-bold">Dicas de Viagem</h2>
+        <a href="{% url 'lista_de_posts' %}" class="btn btn-link text-decoration-none fw-bold">Ver tudo <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <div class="row g-4">
+      {% for post in posts_recentes %}
+        <div class="col-lg-4 col-md-6">
+          <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+            {% if post.imagem_destaque %}<img src="{{ post.imagem_destaque.url }}" class="card-img-top" style="height: 220px; object-fit: cover;">{% endif %}
+            <div class="card-body p-4">
+              <small class="text-primary fw-bold text-uppercase" style="font-size: 0.75rem;">Blog JVC</small>
+              <h5 class="card-title fw-bold mt-2 mb-3"><a href="{% url 'detalhe_do_post' slug=post.slug %}" class="text-dark text-decoration-none stretched-link">{{ post.titulo }}</a></h5>
+              <p class="card-text text-muted small">{{ post.conteudo|truncatewords:20|striptags }}</p>
+            </div>
+            <div class="card-footer bg-white border-0 px-4 pb-4 pt-0">
+                <small class="text-muted"><i class="bi bi-calendar3 me-1"></i> {{ post.data_publicacao|date:"d M Y" }}</small>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<a href="https://wa.me/5582999999999" class="btn-whatsapp-float" target="_blank"><i class="bi bi-whatsapp"></i></a>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var swiper = new Swiper(".mySwiper", {
+            slidesPerView: 1,      // Celular: 1 slide
+            spaceBetween: 25,
+            loop: true,            // Loop Infinito
+            grabCursor: true,
+            autoplay: {
+                delay: 4000,
+                disableOnInteraction: false,
+            },
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
+            },
+            breakpoints: {
+                768: {
+                    slidesPerView: 2, // Tablet: 2 slides
+                },
+                1024: {
+                    slidesPerView: 3, // Desktop: 3 slides
+                },
+            },
+        });
+    });
+</script>
+
+{% endblock %}

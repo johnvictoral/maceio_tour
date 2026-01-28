@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    .sidebar-widget {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+    .price-tag {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #117864;
+    }
+    .form-section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #eee;
+    }
+</style>
+
+<div class="bg-light py-5">
+    <div class="container text-center">
+        <span class="badge bg-dark rounded-pill px-3 py-2 mb-3">Transporte Executivo</span>
+        <h1 class="display-4 fw-bold">Agendar Transfer</h1>
+        <p class="text-muted lead">Conforto e pontualidade no seu trajeto: {{ transfer.titulo }}.</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row">
+        
+        <div class="col-lg-8">
+            
+            <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
+                {% if transfer.imagem %}
+                <img src="{{ transfer.imagem.url }}" class="w-100" style="height: 250px; object-fit: cover;" alt="{{ transfer.titulo }}">
+                {% endif %}
+                <div class="card-body p-4">
+                    <h3 class="fw-bold mb-2">{{ transfer.titulo }}</h3>
+                    <p class="text-muted mb-0">{{ transfer.descricao }}</p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <h2 class="fw-bold mb-4">Dados da Viagem</h2>
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <div class="mb-5">
+                            <h5 class="form-section-title"><i class="bi bi-person-badge me-2"></i>Passageiro Responsável</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="fw-bold small text-muted">Nome</label>
+                                    {{ cliente_form.nome }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="fw-bold small text-muted">Sobrenome</label>
+                                    {{ cliente_form.sobrenome }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="fw-bold small text-muted">E-mail</label>
+                                    {{ cliente_form.email }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="fw-bold small text-muted">WhatsApp</label>
+                                    {{ cliente_form.telefone }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h5 class="form-section-title"><i class="bi bi-airplane-engines me-2"></i>Detalhes do Voo / Rota</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="fw-bold small text-muted">Data da Chegada/Saída</label>
+                                    {{ reserva_form.data_agendamento }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="fw-bold small text-muted">Nº de Passageiros</label>
+                                    {{ reserva_form.numero_passageiros }}
+                                </div>
+                                <div class="col-12">
+                                    <label class="fw-bold small text-muted">Local de Destino/Partida (Hotel)</label>
+                                    {{ reserva_form.local_partida }}
+                                </div>
+                                <div class="col-12">
+                                    <label class="fw-bold small text-muted">Número do Voo e Horário (Importante)</label>
+                                    {{ reserva_form.informacoes_voo }}
+                                    <div class="form-text">Ex: Voo LATAM 3345 chegando às 14:30.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-5">
+                            <button type="submit" class="btn btn-dark btn-lg rounded-pill fw-bold shadow">
+                                Solicitar Agendamento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mt-5 mt-lg-0">
+            <div style="position: sticky; top: 100px;">
+                
+                <div class="sidebar-widget text-center">
+                    <p class="text-muted text-uppercase small fw-bold mb-2">Valor Estimado</p>
+                    <div class="price-tag mb-3">
+                        R$ {{ transfer.valor|floatformat:0 }}
+                    </div>
+                    
+                    <ul class="list-unstyled text-start small text-muted mb-4 bg-light p-3 rounded-3">
+                        <li class="mb-2"><i class="bi bi-shield-check text-dark me-2"></i> Motorista Credenciado</li>
+                        <li class="mb-2"><i class="bi bi-clock-history text-dark me-2"></i> Espera no Desembarque</li>
+                        <li><i class="bi bi-snow text-dark me-2"></i> Carro Climatizado</li>
+                    </ul>
+
+                    <div class="d-grid">
+                        <a href="https://wa.me/5582999999999" target="_blank" class="btn btn-success rounded-pill fw-bold">
+                            <i class="bi bi-whatsapp me-1"></i> Falar no WhatsApp
+                        </a>
+                    </div>
+                </div>
+
+                <div class="sidebar-widget">
+                    <h5 class="fw-bold mb-4 pb-2 border-bottom">Outras Opções</h5>
+                    {% for item in sugestoes %}
+                    <div class="d-flex align-items-center mb-3">
+                        {% if item.imagem %}
+                        <img src="{{ item.imagem.url }}" class="rounded-3 object-fit-cover shadow-sm" width="60" height="60">
+                        {% endif %}
+                        <div class="ms-3">
+                            <h6 class="mb-1 fw-bold">
+                                <a href="{% url 'fazer_reserva_transfer' transfer_id=item.id %}" class="text-decoration-none text-dark stretched-link">
+                                    {{ item.titulo }}
+                                </a>
+                            </h6>
+                            <small class="text-muted">R$ {{ item.valor|floatformat:0 }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

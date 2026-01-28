@@ -1,0 +1,134 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% load format_helpers %}
+
+{% block dashboard_content %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h2 class="h3 fw-bold mb-0">Detalhes da Reserva #{{ reserva.numero_reserva }}</h2>
+    <p class="text-muted mb-0">Gerencie as informações e o status desta reserva.</p>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{% url 'editar_reserva' reserva_id=reserva.id %}" class="btn btn-warning" title="Editar Reserva"><i class="bi bi-pencil-fill"></i><span class="d-none d-sm-inline ms-1">Editar</span></a>
+    <a href="https://wa.me/{{ reserva.cliente.telefone|format_whatsapp_number }}?text={% filter urlencode %}Olá, {{ reserva.cliente.nome }}! Estou passando para confirmar seu {{ reserva.get_tipo_display|lower }} para {% if reserva.tipo == 'passeio' %}{{ reserva.praia_destino.nome }}{% else %}{{ reserva.local_chegada }}{% endif %} no dia {{ reserva.data_agendamento|date:"d/m/Y" }} às {{ reserva.data_agendamento|date:"H:i" }}h.{% endfilter %}" 
+       target="_blank" class="btn btn-success" title="Confirmar via WhatsApp"><i class="bi bi-whatsapp"></i><span class="d-none d-sm-inline ms-1">Confirmar</span></a>
+    <a href="{% url 'gerar_recibo_pdf' reserva_id=reserva.id %}" target="_blank" class="btn btn-info text-white" title="Gerar Recibo"><i class="bi bi-printer"></i><span class="d-none d-sm-inline ms-1">Recibo</span></a>
+    <a href="{% url 'painel' %}" class="btn btn-secondary" title="Voltar para a Lista"><i class="bi bi-arrow-left-circle"></i><span class="d-none d-sm-inline ms-1">Voltar</span></a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body d-flex align-items-center">
+            <div class="fs-2 text-primary me-3"><i class="bi bi-person-circle"></i></div>
+            <div>
+              <h6 class="card-subtitle mb-1 text-muted">Cliente</h6>
+              <h5 class="card-title mb-0 fw-bold">{{ reserva.cliente.nome }} {{ reserva.cliente.sobrenome }}</h5>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body d-flex align-items-center">
+            <div class="fs-2 text-success me-3"><i class="bi bi-calendar-check"></i></div>
+            <div>
+              <h6 class="card-subtitle mb-1 text-muted">Agendado para</h6>
+              <h5 class="card-title mb-0 fw-bold">{{ reserva.data_agendamento|date:"d/m/Y, H:i" }}</h5>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body d-flex align-items-center">
+            <div class="fs-2 text-warning me-3"><i class="bi bi-info-circle"></i></div>
+            <div>
+              <h6 class="card-subtitle mb-1 text-muted">Status Atual</h6>
+              {% if reserva.status == 'pendente' %}<span class="badge bg-warning text-dark fs-6">{{ reserva.get_status_display }}</span>{% endif %}
+              {% if reserva.status == 'confirmado' %}<span class="badge bg-success fs-6">{{ reserva.get_status_display }}</span>{% endif %}
+              {% if reserva.status == 'concluido' %}<span class="badge bg-secondary fs-6">{{ reserva.get_status_display }}</span>{% endif %}
+              {% if reserva.status == 'cancelado' %}<span class="badge bg-danger fs-6">{{ reserva.get_status_display }}</span>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="card-header">
+    <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
+      <li class="nav-item" role="presentation"><button class="nav-link active" id="reserva-tab" data-bs-toggle="tab" data-bs-target="#reserva-tab-pane" type="button" role="tab">Detalhes da Reserva</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" id="guia-tab" data-bs-toggle="tab" data-bs-target="#guia-tab-pane" type="button" role="tab">Guia Responsável</button></li>
+    </ul>
+  </div>
+  <div class="card-body">
+    <div class="tab-content" id="myTabContent">
+      <div class="tab-pane fade show active" id="reserva-tab-pane" role="tabpanel">
+        <div class="row">
+          <div class="col-md-6">
+            <h5 class="mb-3">Informações do Serviço</h5>
+            <dl class="row">
+              <dt class="col-sm-5">Tipo de Serviço:</dt><dd class="col-sm-7">{{ reserva.get_tipo_display }}</dd>
+              <dt class="col-sm-5">Valor Registrado:</dt><dd class="col-sm-7 fw-bold">R$ {{ reserva.valor|floatformat:2|default:"Não definido" }}</dd>
+              <dt class="col-sm-5">Nº de Passageiros:</dt><dd class="col-sm-7">{{ reserva.numero_passageiros }}</dd>
+              {% if reserva.tipo == 'passeio' %}
+                <dt class="col-sm-5">Passeio:</dt><dd class="col-sm-7">{{ reserva.praia_destino.nome }}</dd>
+                <dt class="col-sm-5">Local de Partida:</dt><dd class="col-sm-7">{{ reserva.local_partida }}</dd>
+              {% else %}
+                <dt class="col-sm-5">Trajeto:</dt><dd class="col-sm-7">{{ reserva.local_partida }} → {{ reserva.local_chegada }}</dd>
+                <dt class="col-sm-5">Voo:</dt><dd class="col-sm-7">{{ reserva.informacoes_voo|default:"Não informado" }}</dd>
+              {% endif %}
+              <dt class="col-sm-5">Pedido feito em:</dt><dd class="col-sm-7">{{ reserva.data_criacao|date:"d/m/Y, H:i" }}</dd>
+            </dl>
+          </div>
+          <div class="col-md-6">
+            <h5 class="mb-3">Informações do Cliente</h5>
+            <dl class="row">
+              <dt class="col-sm-4">Nome:</dt><dd class="col-sm-8">{{ reserva.cliente.nome }} {{ reserva.cliente.sobrenome }}</dd>
+              <dt class="col-sm-4">Email:</dt><dd class="col-sm-8">{{ reserva.cliente.email }}</dd>
+              <dt class="col-sm-4">Telefone:</dt><dd class="col-sm-8">{{ reserva.cliente.telefone }}</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="guia-tab-pane" role="tabpanel">
+        <h5 class="mb-3">Atribuir Guia</h5>
+        {% if reserva.guia_atribuido %}<p>Guia atual: <strong>{{ reserva.guia_atribuido.nome }}</strong></p>{% else %}<p class="text-muted">Nenhum guia atribuído.</p>{% endif %}
+        <hr>
+        <form method="POST">
+          {% csrf_token %}
+          <div class="row align-items-end">
+            <div class="col-md-8">
+              <label for="guia" class="form-label">Selecione um guia disponível:</label>
+              <select name="guia" id="guia" class="form-select">
+                <option value="">-- Nenhum --</option>
+                {% for guia in guias %}<option value="{{ guia.id }}" {% if reserva.guia_atribuido.id == guia.id %}selected{% endif %}>{{ guia.nome }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <button type="submit" class="btn btn-primary w-100">Salvar Guia</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-footer bg-light text-end">
+    <form method="POST" class="d-inline">
+      {% csrf_token %}
+      {% if reserva.status == 'pendente' %}
+        <button type="submit" name="status" value="confirmado" class="btn btn-success"><i class="bi bi-check-circle"></i> Confirmar Reserva</button>
+      {% endif %}
+      {% if reserva.status == 'confirmado' %}
+        <button type="submit" name="status" value="concluido" class="btn btn-info text-white"><i class="bi bi-flag"></i> Marcar como Concluída</button>
+      {% endif %}
+      {% if reserva.status != 'cancelado' and reserva.status != 'concluido' %}
+        <button type="submit" name="status" value="cancelado" class="btn btn-danger"><i class="bi bi-x-circle"></i> Cancelar Reserva</button>
+      {% endif %}
+    </form>
+  </div>
+  </div>
+{% endblock %}

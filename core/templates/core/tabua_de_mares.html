@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold text-primary">Tábua de Marés 2026 - Maceió, AL</h1>
+        <p class="lead text-muted">Confira os melhores dias para visitar as piscinas naturais!</p>
+    </div>
+
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-5 col-lg-4">
+            <form method="GET" class="d-flex align-items-center bg-light p-3 rounded-4 shadow-sm border">
+                <label for="mes" class="form-label me-3 mb-0 fw-bold text-secondary">
+                    <i class="bi bi-calendar-event me-1"></i> Mês:
+                </label>
+                <select name="mes" id="mes" class="form-select border-0 bg-white fw-bold text-primary" onchange="this.form.submit()" style="cursor: pointer;">
+                    {% for mes in meses_disponiveis %}
+                        <option value="{{ mes }}" {% if mes == mes_selecionado %}selected{% endif %}>
+                            {{ mes }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+
+    {% if tabela_mares %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+            {% for dia_dados in tabela_mares %}
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+                        <div class="card-header text-center fw-bold bg-primary text-white py-3">
+                            <i class="bi bi-calendar-day me-1"></i> Dia {{ dia_dados.dia }}
+                        </div>
+                        
+                        <ul class="list-group list-group-flush">
+                            {% for mare in dia_dados.mares %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-3
+                                  {% if mare.altura <= 0.3 and mare.altura >= 0 %}bg-success-subtle border-success-subtle{% endif %}">
+                                    
+                                    <span class="fs-5 fw-medium text-dark">
+                                        <i class="bi bi-clock me-1 text-muted small"></i> {{ mare.hora }}
+                                    </span>
+                                    
+                                    <div class="d-flex align-items-center bg-white px-2 py-1 rounded-3 border">
+                                        <span class="fw-bold me-2 fs-6 text-dark">{{ mare.altura|floatformat:2 }}m</span>
+                                        
+                                        {% if mare.tendencia == 'subindo' %}
+                                            <i class="bi bi-caret-up-fill text-danger" title="Maré Enchendo" data-bs-toggle="tooltip"></i>
+                                        {% elif mare.tendencia == 'descendo' %}
+                                            <i class="bi bi-caret-down-fill text-success" title="Maré Vazando" data-bs-toggle="tooltip"></i>
+                                        {% else %}
+                                            <i class="bi bi-dash text-muted"></i>
+                                        {% endif %}
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-search fs-1 text-muted mb-3"></i>
+            <p class="text-muted fs-5">Nenhum dado encontrado para este mês.</p>
+        </div>
+    {% endif %}
+    
+    <div class="alert alert-light border shadow-sm mt-5 rounded-4" role="alert">
+        <div class="d-flex align-items-start">
+            <i class="bi bi-info-circle-fill text-primary fs-3 me-3"></i>
+            <div>
+                <h5 class="alert-heading fw-bold text-primary mb-2">Entenda a Tábua</h5>
+                <p class="mb-1 text-muted small">
+                    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle me-1">Fundo Verde</span> 
+                    Indica os melhores horários para <strong>piscinas naturais</strong> (maré até 0.3m).
+                </p>
+                <p class="mb-0 text-muted small">
+                    <i class="bi bi-caret-down-fill text-success"></i> <strong>Vazando:</strong> O nível da água está baixando (Ideal chegar antes do nível mínimo).<br>
+                    <i class="bi bi-caret-up-fill text-danger"></i> <strong>Enchendo:</strong> O nível da água está subindo.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Ativa os tooltips do Bootstrap (opcional, mas recomendado para UX)
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+{% endblock %}

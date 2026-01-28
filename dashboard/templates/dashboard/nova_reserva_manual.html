@@ -1,0 +1,113 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block dashboard_content %}
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white">
+    <h5 class="mb-0"><i class="bi bi-plus-circle-fill me-2"></i>Cadastrar Nova Reserva Manual</h5>
+  </div>
+  <div class="card-body">
+    <form method="POST">
+      {% csrf_token %}
+      
+      <h6 class="text-primary fw-bold mb-3">1. Dados do Cliente</h6>
+      <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Nome</label>
+            {{ form.nome_cliente }}
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Sobrenome</label>
+            {{ form.sobrenome_cliente }}
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Email</label>
+            {{ form.email_cliente }}
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Telefone</label>
+            {{ form.telefone_cliente }}
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <h6 class="text-primary fw-bold mb-3">2. Detalhes do Serviço</h6>
+      
+      <div class="mb-3">
+        <label class="form-label fw-bold">O que o cliente vai fazer?</label>
+        {{ form.tipo_servico }}
+      </div>
+
+      <div id="bloco-passeio" class="p-3 bg-light rounded mb-3" style="display:none;">
+        <label class="form-label">Selecione o Passeio:</label>
+        {{ form.praia_selecionada }}
+      </div>
+
+      <div id="bloco-transfer" class="p-3 bg-light rounded mb-3" style="display:none;">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Origem</label>
+                {{ form.local_partida }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Destino</label>
+                {{ form.local_chegada }}
+            </div>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label">Data e Hora</label>
+            {{ form.data_agendamento }}
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Nº Passageiros</label>
+            {{ form.numero_passageiros }}
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Valor Combinado (R$)</label>
+            {{ form.valor }}
+        </div>
+        <div class="col-12">
+            <label class="form-label">Informações Adicionais (Voo/Obs)</label>
+            {{ form.informacoes_voo }}
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-success btn-lg">
+            <i class="bi bi-check-lg"></i> Salvar e Finalizar
+        </button>
+        <button type="submit" name="salvar_adicionar" class="btn btn-outline-primary btn-lg">
+            <i class="bi bi-plus-lg"></i> Salvar e Adicionar Outro (Mesmo Cliente)
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+    function toggleCampos() {
+        var tipo = document.getElementById('id_tipo_servico').value;
+        var blocoPasseio = document.getElementById('bloco-passeio');
+        var blocoTransfer = document.getElementById('bloco-transfer');
+
+        if (tipo === 'passeio') {
+            blocoPasseio.style.display = 'block';
+            blocoTransfer.style.display = 'none';
+        } else {
+            blocoPasseio.style.display = 'none';
+            blocoTransfer.style.display = 'block';
+        }
+    }
+
+    // Roda a função ao carregar a página para garantir o estado correto
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleCampos();
+    });
+</script>
+{% endblock %}

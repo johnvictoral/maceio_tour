@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5 py-5">
+    <div class="row align-items-center">
+        <div class="col-lg-6">
+            <img src="{% static 'images/placeholder-guia.jpg' %}" class="img-fluid rounded shadow-lg" alt="Foto do seu guia de turismo">
+            </div>
+        <div class="col-lg-6">
+            <h1 class="display-5 fw-bold">Sobre a JVC Receptivo</h1>
+            <p class="lead text-muted">Sua melhor experiência em Maceió começa aqui.</p>
+            <hr class="my-4">
+            <p>
+                Olá! Eu sou o guia por trás da JVC Receptivo, um apaixonado por Alagoas e por proporcionar experiências inesquecíveis aos visitantes da nossa terra. Com anos de experiência no turismo local, meu objetivo é ir além do óbvio, mostrando as belezas naturais, a cultura e a gastronomia que fazem de Maceió um destino único.
+            </p>
+            <p>
+                Prezo pela segurança, conforto e, acima de tudo, pela sua satisfação. Cada passeio e transfer é planejado com cuidado para que sua única preocupação seja aproveitar o paraíso.
+            </p>
+            <p><strong>Vamos explorar juntos o melhor de Alagoas!</strong></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

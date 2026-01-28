@@ -1,0 +1,73 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block dashboard_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                <h4 class="fw-bold mb-0">{{ titulo }}</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Ops! Corrija os erros abaixo:</strong>
+        <ul>
+        {% for field in form %}
+            {% for error in field.errors %}
+                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+{% endif %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nome da Praia</label>
+                        {{ form.nome }}
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Valor</label>
+                            {{ form.valor }}
+                        </div>
+                        <div class="col-md-6 d-flex align-items-center mt-4">
+                            <div class="form-check form-switch">
+                                {{ form.ativo }}
+                                <label class="form-check-label ms-2">Disponível no Site?</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Descrição Curta (Card)</label>
+                        {{ form.descricao_curta }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Descrição Completa</label>
+                        {{ form.descricao_longa }}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Imagem de Destaque</label>
+                        {{ form.imagem }}
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{% url 'lista_praias' %}" class="btn btn-light rounded-pill px-4">Cancelar</a>
+                        <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold">Salvar Dados</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

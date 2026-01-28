@@ -1,0 +1,76 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-0">Banners do Site</h3>
+        <p class="text-muted small mb-0">Gerencie as imagens rotativas da página inicial.</p>
+    </div>
+    <a href="{% url 'novo_carrossel' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+        <i class="bi bi-plus-lg me-1"></i> Adicionar Banner
+    </a>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4">Imagem</th>
+                    <th>Legenda (Título)</th>
+                    <th>Link (Botão)</th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in imagens %}
+                <tr>
+                    <td class="ps-4">
+                        {% if item.imagem %}
+                            <img src="{{ item.imagem.url }}" class="rounded-3 shadow-sm object-fit-cover" width="100" height="60">
+                        {% else %}
+                            <div class="bg-light rounded-3 d-flex align-items-center justify-content-center text-muted" style="width: 100px; height: 60px;">
+                                <i class="bi bi-image"></i>
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td class="fw-bold text-dark">{{ item.legenda|default:"Sem legenda" }}</td>
+                    <td class="small text-muted">
+                        {% if item.praia_link %}
+                            <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill">
+                                Leva para: {{ item.praia_link.nome }}
+                            </span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.ativa %}
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill">Visível</span>
+                        {% else %}
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill">Oculto</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-4">
+                        <a href="{% url 'editar_carrossel' item_id=item.id %}" class="btn btn-sm btn-light rounded-circle text-primary" title="Editar">
+                            <i class="bi bi-pencil-fill"></i>
+                        </a>
+                        <a href="{% url 'excluir_carrossel' item_id=item.id %}" class="btn btn-sm btn-light rounded-circle text-danger" onclick="return confirm('Excluir este banner?');" title="Excluir">
+                            <i class="bi bi-trash-fill"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-5">
+                        <i class="bi bi-images fs-1 text-muted"></i>
+                        <p class="mt-2 text-muted">Nenhum banner cadastrado.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

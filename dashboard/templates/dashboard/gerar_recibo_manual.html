@@ -1,0 +1,32 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block dashboard_content %}
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white">
+    <h5 class="mb-0">Gerador de Recibo Manual</h5>
+  </div>
+  <div class="card-body">
+    <p class="card-text">Preencha os campos abaixo para gerar um novo recibo em PDF.</p>
+    
+    <form method="POST">
+      {% csrf_token %}
+      <div class="row g-3">
+        {% for field in form %}
+          <div class="col-md-6">
+            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+              <div class="text-danger small mt-1">
+                {{ field.errors|first }}
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+      <hr class="my-4">
+      <button type="submit" class="btn btn-primary"><i class="bi bi-printer"></i> Gerar e Visualizar PDF</button>
+    </form>
+    
+  </div>
+</div>
+{% endblock %}

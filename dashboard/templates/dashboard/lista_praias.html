@@ -1,0 +1,58 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-dark mb-0">Gerenciar Praias/Passeios</h3>
+    <a href="{% url 'nova_praia' %}" class="btn btn-success rounded-pill px-4 shadow-sm">
+        <i class="bi bi-plus-lg me-1"></i> Adicionar Praia
+    </a>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4">Imagem</th>
+                    <th>Nome</th>
+                    <th>Valor (R$)</th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for praia in praias %}
+                <tr>
+                    <td class="ps-4">
+                        {% if praia.imagem %}
+                            <img src="{{ praia.imagem.url }}" class="rounded-3 shadow-sm" style="width: 60px; height: 40px; object-fit: cover;">
+                        {% else %}
+                            <span class="badge bg-secondary">Sem Foto</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-bold">{{ praia.nome }}</td>
+                    <td>R$ {{ praia.valor|default:"0,00" }}</td>
+                    <td>
+                        {% if praia.ativo %}
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill">Ativo</span>
+                        {% else %}
+                            <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill">Inativo</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-4">
+                        <a href="{% url 'editar_praia' praia_id=praia.id %}" class="btn btn-sm btn-light rounded-circle text-primary" title="Editar">
+                            <i class="bi bi-pencil-fill"></i>
+                        </a>
+                        <a href="{% url 'excluir_praia' praia_id=praia.id %}" class="btn btn-sm btn-light rounded-circle text-danger" onclick="return confirm('Tem certeza?');" title="Excluir">
+                            <i class="bi bi-trash-fill"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center py-4">Nenhuma praia cadastrada.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

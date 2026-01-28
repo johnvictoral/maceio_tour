@@ -1,0 +1,80 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block dashboard_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                <h4 class="fw-bold mb-0">{{ titulo }}</h4>
+            </div>
+            <div class="card-body p-4">
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Ops! Verifique os erros:</strong>
+                            <ul>
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endif %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold">Nome do Transfer / Rota</label>
+                            {{ form.titulo }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Valor (R$)</label>
+                            {{ form.valor }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Origem</label>
+                        {{ form.origem }} 
+                        </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Destino</label>
+                        {{ form.destino }}
+                         </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Descrição Curta</label>
+                        {{ form.descricao }}
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold">Foto</label>
+                            {{ form.imagem }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Direção / Tipo</label>
+                            {{ form.direcao }}
+                        </div>
+                    </div>
+                    
+                    <div class="form-check form-switch mb-4">
+                         {{ form.mais_vendido }}
+                         <label class="form-check-label ms-2">Destacar como "Mais Vendido"?</label>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end border-top pt-3">
+                        <a href="{% url 'lista_transfers' %}" class="btn btn-light rounded-pill px-4">Cancelar</a>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Salvar Transfer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

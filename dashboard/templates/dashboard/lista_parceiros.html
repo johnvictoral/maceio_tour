@@ -1,0 +1,58 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block dashboard_content %}
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-header bg-white">
+    <h5 class="mb-0"><i class="bi bi-person-plus-fill me-2"></i>Cadastrar Novo Parceiro</h5>
+  </div>
+  <div class="card-body">
+    <form method="POST">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-6"><label class="form-label">{{ form.nome.label }}</label>{{ form.nome }}</div>
+        <div class="col-md-6"><label class="form-label">{{ form.telefone.label }}</label>{{ form.telefone }}</div>
+        <div class="col-md-4"><label class="form-label">{{ form.placa_carro.label }}</label>{{ form.placa_carro }}</div>
+        <div class="col-md-4"><label class="form-label">{{ form.modelo_carro.label }}</label>{{ form.modelo_carro }}</div>
+        <div class="col-md-4"><label class="form-label">{{ form.cor_carro.label }}</label>{{ form.cor_carro }}</div>
+        <div class="col-12 mt-4">
+  <div class="form-check form-switch">
+    {{ form.ativo }}
+    <label class="form-check-label" for="{{ form.ativo.id_for_label }}">{{ form.ativo.help_text }}</label>
+  </div>
+</div>
+      </div>
+      <hr>
+      <button type="submit" class="btn btn-primary">Salvar Parceiro</button>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>Parceiros Cadastrados</h5></div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead><tr><th>Nome</th><th>Telefone</th><th>Veículo</th><th class="text-center">Total de Viagens</th><th>Ações</th></tr></thead>
+        <tbody>
+          {% for parceiro in parceiros %}
+            <tr>
+              <td>{{ parceiro.nome }}</td>
+              <td>{{ parceiro.telefone }}</td>
+              <td>{{ parceiro.modelo_carro }} ({{ parceiro.placa_carro }}) - {{ parceiro.cor_carro }}</td>
+              <td class="text-center"><span class="badge bg-secondary">{{ parceiro.reservas.count }}</span></td>
+              <td>
+                <form action="{% url 'excluir_parceiro' guia_id=parceiro.id %}" method="POST" class="d-inline">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Tem certeza que deseja excluir este parceiro?');"><i class="bi bi-trash"></i></button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="text-center py-4">Nenhum parceiro cadastrado.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

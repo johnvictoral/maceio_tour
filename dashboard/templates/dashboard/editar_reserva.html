@@ -1,0 +1,29 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block dashboard_content %}
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white">
+    <h5 class="mb-0">Editando Reserva #{{ reserva.id }}</h5>
+    <p class="text-muted small mb-0">Cliente: {{ reserva.cliente.nome }} {{ reserva.cliente.sobrenome }}</p>
+  </div>
+  <div class="card-body">
+    <form method="POST">
+      {% csrf_token %}
+
+      {% for field in form %}
+        <div class="mb-3">
+          <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <div class="text-danger small mt-1">{{ field.errors|first }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <hr>
+      <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+      <a href="{% url 'detalhe_reserva' reserva_id=reserva.id %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

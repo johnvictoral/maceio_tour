@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    /* Estilo para o Card de Preço Flutuante */
+    .booking-card {
+        background-color: #fff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        border: 1px solid rgba(0,0,0,0.05);
+        position: sticky;
+        top: 100px; /* Faz o card acompanhar a rolagem */
+    }
+
+    .benefit-list li {
+        margin-bottom: 0.8rem;
+        font-size: 0.95rem;
+        color: #555;
+        display: flex;
+        align-items: center;
+    }
+
+    .benefit-list i {
+        color: #198754; /* Verde sucesso */
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+
+    .btn-reserve {
+        background: linear-gradient(45deg, #117864, #1abc9c);
+        border: none;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .btn-reserve:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(26, 188, 156, 0.4);
+        background: linear-gradient(45deg, #0e6655, #16a085);
+    }
+</style>
+
+<div class="container mt-5 py-4">
+  <div class="row">
+    
+    <div class="col-lg-7 mb-5">
+      {% if transfer.imagem %}
+        <img src="{{ transfer.imagem.url }}" class="img-fluid rounded-4 shadow mb-4 w-100" style="object-fit: cover; max-height: 450px;" alt="{{ transfer.titulo }}">
+      {% endif %}
+      
+      <div class="pe-lg-4">
+        <h3 class="fw-bold mb-3 text-dark">Sobre este serviço</h3>
+        <hr class="mb-4">
+        <div class="text-secondary" style="text-align: justify; line-height: 1.8; font-size: 1.1rem;">
+            {{ transfer.descricao|linebreaks }}
+            {% if transfer.descricao_longa %}
+                {{ transfer.descricao_longa|linebreaks }}
+            {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="booking-card p-4 p-md-5">
+        
+        <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 fw-bold mb-3">
+            Transfer Privativo
+        </span>
+        
+        <h1 class="fw-bold mb-2 h2">{{ transfer.titulo }}</h1>
+        <p class="text-muted small mb-4">Conforto e segurança no seu trajeto.</p>
+        
+        <div class="text-center bg-light rounded-3 py-4 mb-4 border border-secondary border-opacity-10">
+            <p class="text-uppercase small fw-bold text-muted mb-1">Valor Estimado</p>
+            <h2 class="display-4 fw-bolder text-dark m-0">
+                R$ {{ transfer.valor|floatformat:0 }}
+            </h2>
+            <small class="text-muted">Preço por veículo (até 4 pessoas)</small>
+        </div>
+
+        <ul class="list-unstyled benefit-list mb-4">
+            <li><i class="bi bi-check-circle-fill"></i> Motorista Profissional Credenciado</li>
+            <li><i class="bi bi-check-circle-fill"></i> Veículo com Ar-condicionado</li>
+            <li><i class="bi bi-check-circle-fill"></i> Pontualidade Garantida</li>
+            <li><i class="bi bi-check-circle-fill"></i> Sem taxas ocultas</li>
+        </ul>
+
+        <div class="d-grid gap-3">
+            <a href="{% url 'fazer_reserva_transfer' transfer_id=transfer.id %}" class="btn btn-reserve btn-lg text-white rounded-pill fw-bold py-3 shadow-sm">
+                <i class="bi bi-calendar-check me-2"></i> Solicitar Agendamento
+            </a>
+            
+            <a href="https://wa.me/5582999999999?text=Olá, gostaria de tirar dúvidas sobre o transfer: {{ transfer.titulo }}" target="_blank" class="btn btn-outline-success rounded-pill fw-bold">
+                <i class="bi bi-whatsapp me-2"></i> Tenho Dúvidas
+            </a>
+        </div>
+
+        <div class="text-center mt-3">
+            <small class="text-muted"><i class="bi bi-shield-lock-fill me-1"></i> Seus dados estão protegidos.</small>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

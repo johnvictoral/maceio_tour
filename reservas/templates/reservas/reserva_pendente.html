@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container text-center py-5">
+    <h1 class="display-5 text-info">Pagamento Pendente</h1>
+    <p class="lead">Seu pagamento está sendo processado (por exemplo, aguardando compensação de boleto). A reserva será confirmada assim que recebermos a aprovação.</p>
+    <a href="{% url 'home' %}" class="btn btn-primary">Voltar para o Início</a>
+  </div>
+{% endblock %}

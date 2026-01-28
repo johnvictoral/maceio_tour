@@ -1,0 +1,56 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block dashboard_content %}
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white">
+    <h5 class="mb-0">Calendário de Reservas</h5>
+  </div>
+  <div class="card-body">
+    <div id='calendar'></div>
+  </div>
+</div>
+
+<style>
+  /* Pequenos ajustes para o visual do calendário */
+  .fc .fc-event {
+    cursor: pointer; /* Muda o cursor para indicar que o evento é clicável */
+  }
+</style>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+
+<script>
+  // Garante que o código só rode depois que a página carregar
+  document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+
+    // Inicializa o FullCalendar
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      // --- CONFIGURAÇÕES DO CALENDÁRIO ---
+      initialView: 'dayGridMonth', // Visão inicial: Mês
+      locale: 'pt-br', // Traduz para o português do Brasil
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay' // Botões para mudar a visão
+      },
+
+      // --- FONTE DE DADOS ---
+      // Diz ao calendário para buscar os eventos na nossa nova API
+      events: "{% url 'calendario_api' %}",
+
+      // --- INTERATIVIDADE ---
+      // Define o que acontece quando um evento é clicado
+      eventClick: function(info) {
+        info.jsEvent.preventDefault(); // Não deixa o navegador seguir o link imediatamente
+        if (info.event.url) {
+          // Abre o link do evento (a página de detalhes da reserva) na mesma aba
+          window.open(info.event.url, "_self");
+        }
+      }
+    });
+
+    // Renderiza o calendário na tela
+    calendar.render();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  
+  <div class="row">
+
+    <div class="col-lg-7 mb-4">
+      
+      <img src="{{ praia.imagem.url }}" class="img-fluid rounded shadow-lg" alt="{{ praia.nome }}">
+
+      <div class="mt-5">
+        <h3 class="fw-bold">Sobre o Passeio</h3>
+        <hr>
+        <p style="text-align: justify;">{{ praia.descricao_longa|linebreaks }}</p>
+      </div>
+
+    </div>
+
+    <div class="col-lg-5">
+      <h1 class="fw-bold">{{ praia.nome }}</h1>
+      <p class="lead text-muted">{{ praia.descricao_curta }}</p>
+      
+      <hr>
+
+      <div class="card bg-light border-0 shadow-sm my-4">
+        <div class="card-body text-center">
+          
+          <h2 class="card-title display-4 fw-bolder">
+            R$ {{ praia.valor|floatformat:2 }}
+          </h2>
+          <div class="d-grid">
+            <a href="{% url 'fazer_reserva_passeio' praia_id=praia.id %}" class="btn btn-primary btn-lg rounded-pill shadow">
+    Reservar Agora
+</a>
+          </div>
+        </div>
+      </div>
+
+      <h4 class="mt-4">Outros Passeios</h4>
+      <div class="list-group">
+        {% for sugestao in sugestoes %}
+          <a href="{% url 'detalhe_praia' slug=sugestao.slug %}" class="list-group-item list-group-item-action d-flex gap-3 py-3">
+            <img src="{{ sugestao.imagem.url }}" alt="{{ sugestao.nome }}" width="48" height="48" class="rounded-circle flex-shrink-0" style="object-fit: cover;">
+            <div class="d-flex gap-2 w-100 justify-content-between">
+              <div>
+                <h6 class="mb-0">{{ sugestao.nome }}</h6>
+                <p class="mb-0 opacity-75 small">{{ sugestao.descricao_curta|truncatewords:8 }}</p>
+              </div>
+              <small class="opacity-50 text-nowrap">R$ {{ sugestao.valor|floatformat:2 }}</small>
+            </div>
+          </a>
+        {% empty %}
+          <p class="text-muted">Nenhum outro passeio para sugerir no momento.</p>
+        {% endfor %}
+      </div>
+      
+    </div>
+  </div>
+
+</div>
+{% endblock %}

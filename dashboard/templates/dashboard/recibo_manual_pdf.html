@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Recibo - {{ recibo.numero_recibo }}</title>
+    <style>
+        @page { size: A4; margin: 1.5cm; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #333; font-size: 12pt; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 22px; color: #555; }
+        .header p { margin: 5px 0; font-size: 12px; }
+        .section-title { background-color: #f2f2f2; padding: 10px; font-size: 14pt; border-left: 5px solid #0d6efd; margin-top: 25px; margin-bottom: 15px; font-weight: bold; }
+        .details-table { width: 100%; border-collapse: collapse; }
+        .details-table td { padding: 10px 0; border-bottom: 1px solid #ddd; vertical-align: top; }
+        .details-table .label { font-weight: bold; width: 30%; }
+        .footer { text-align: center; position: fixed; bottom: 40px; left: 0; right: 0; font-size: 10pt; color: #777; }
+
+        /* --- ESTILOS NOVOS --- */
+        .valor-destaque {
+            margin-top: 30px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #0d6efd;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .valor-destaque p {
+            margin: 0;
+            font-size: 14pt;
+            text-transform: uppercase;
+            color: #555;
+            font-weight: bold;
+        }
+        .valor-destaque h2 {
+            margin: 5px 0 0 0;
+            font-size: 28pt;
+            color: #0d6efd;
+        }
+        .assinatura-section {
+            margin-top: 80px; /* Mais espaço para a assinatura */
+            text-align: center;
+        }
+        .linha-assinatura {
+            width: 350px;
+            border-bottom: 1px solid #333;
+            margin: 0 auto;
+        }
+        .assinatura-section p {
+            margin-top: 5px;
+            font-size: 11pt;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>JVC Receptivo</h1>
+        <p>CNPJ: {{ recibo.cnpj_emitente }}</p>
+    </div>
+
+    <h2>Recibo de Pagamento</h2>
+    <p><strong>Número do Recibo:</strong> #{{ recibo.numero_recibo }}</p>
+
+    <h3 class="section-title">Informações</h3>
+    <table class="details-table">
+        <tr><td class="label">Recebemos de:</td><td>{{ recibo.recebemos_de }}</td></tr>
+        <tr><td class="label">Serviço Prestado:</td><td>{{ recibo.servico_prestado|linebreaksbr }}</td></tr>
+        <tr><td class="label">Forma de Pagamento:</td><td>{{ recibo.forma_pagamento }}</td></tr>
+        <tr><td class="label">Data do Serviço:</td><td>{{ recibo.data_viagem|date:"d/m/Y" }}</td></tr>
+        <tr><td class="label">Trajeto:</td><td>{{ recibo.origem }} → {{ recibo.destino }}</td></tr>
+        {% if recibo.observacoes %}
+        <tr><td class="label">Observações:</td><td>{{ recibo.observacoes|linebreaksbr }}</td></tr>
+        {% endif %}
+    </table>
+
+    <div class="valor-destaque">
+        <p>Valor Recebido</p>
+        <h2>R$ {{ recibo.valor|floatformat:2 }}</h2>
+    </div>
+
+    <div class="assinatura-section">
+    <div class="linha-assinatura"></div>
+    <p><strong>Assinatura do Recebedor</strong></p>
+</div>
+
+    <div class="footer">
+        
+        <p>Este é um recibo de pagamento e não um comprovante fiscal.</p>
+    </div>
+</body>
+</html>

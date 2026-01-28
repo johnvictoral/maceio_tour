@@ -1,0 +1,71 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-0">Depoimentos</h3>
+        <p class="text-muted small mb-0">Gerencie o que os clientes dizem sobre você.</p>
+    </div>
+    <a href="{% url 'novo_depoimento' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+        <i class="bi bi-plus-lg me-1"></i> Novo Depoimento
+    </a>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4">Cliente</th>
+                    <th>Depoimento</th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for depoimento in depoimentos %}
+                <tr>
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center">
+                            {% if depoimento.foto %}
+                                <img src="{{ depoimento.foto.url }}" class="rounded-circle object-fit-cover shadow-sm me-3" width="40" height="40">
+                            {% else %}
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center fw-bold text-primary me-3" style="width: 40px; height: 40px;">
+                                    {{ depoimento.nome|slice:":1" }}
+                                </div>
+                            {% endif %}
+                            <div>
+                                <div class="fw-bold text-dark">{{ depoimento.nome }}</div>
+                                <small class="text-muted">{{ depoimento.cidade }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="max-width: 300px;">
+                        <p class="text-muted small mb-0 text-truncate">"{{ depoimento.texto }}"</p>
+                    </td>
+                    <td>
+                        {% if depoimento.ativo %}
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill">Visível</span>
+                        {% else %}
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill">Oculto</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-4">
+                        <a href="{% url 'excluir_depoimento' depoimento_id=depoimento.id %}" class="btn btn-sm btn-light rounded-circle text-danger" onclick="return confirm('Excluir este depoimento?');" title="Excluir">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-5">
+                        <i class="bi bi-chat-quote fs-1 text-muted"></i>
+                        <p class="mt-2 text-muted">Nenhum depoimento cadastrado.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

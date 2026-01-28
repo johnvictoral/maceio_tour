@@ -1,0 +1,97 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block dashboard_content %}
+
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-header bg-white">
+    <h5 class="mb-0"><i class="bi bi-cloud-arrow-up-fill me-2"></i>Adicionar Nova Imagem ao Banner</h5>
+  </div>
+  <div class="card-body">
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-12">
+          <label for="{{ form.imagem.id_for_label }}" class="form-label">{{ form.imagem.label }}</label>
+          {{ form.imagem }}
+          <div class="form-text">Envie imagens com boa resolução, de preferência na horizontal (paisagem).</div>
+        </div>
+
+        <div class="col-md-6">
+          <label for="{{ form.legenda.id_for_label }}" class="form-label">{{ form.legenda.label }}</label>
+          {{ form.legenda }}
+        </div>
+
+        <div class="col-md-6">
+          <label for="{{ form.praia_link.id_for_label }}" class="form-label">{{ form.praia_link.label }}</label>
+          {{ form.praia_link }}
+          <div class="form-text">{{ form.praia_link.help_text }}</div>
+        </div>
+
+        <div class="col-12 mt-4">
+          <div class="form-check">
+            {{ form.ativa }}
+            <label class="form-check-label" for="{{ form.ativa.id_for_label }}">
+              Deixar esta imagem ativa no carrossel?
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <hr>
+      <button type="submit" name="upload_image" class="btn btn-primary">
+        <i class="bi bi-upload"></i> Salvar Imagem
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white">
+    <h5 class="mb-0"><i class="bi bi-images me-2"></i>Imagens Atuais no Carrossel</h5>
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      {% for imagem in imagens %}
+        <div class="col-md-4">
+          <div class="card h-100">
+            <img src="{{ imagem.imagem.url }}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="{{ imagem.legenda }}">
+            <div class="card-body">
+              <p class="card-text"><strong>Legenda:</strong> {{ imagem.legenda|default:"(Sem legenda)" }}</p>
+              
+              {% if imagem.praia_link %}
+                <p class="card-text small text-muted">
+                  <i class="bi bi-link-45deg"></i> Link para: <strong>{{ imagem.praia_link.nome }}</strong>
+                </p>
+              {% endif %}
+              
+              <p class="card-text">
+                <small class="text-muted">
+                  Status: 
+                  {% if imagem.ativa %}
+                    <span class="badge bg-success">Ativa</span>
+                  {% else %}
+                    <span class="badge bg-secondary">Inativa</span>
+                  {% endif %}
+                </small>
+              </p>
+            </div>
+            <div class="card-footer bg-light">
+              <form method="POST" onsubmit="return confirm('Tem certeza que deseja excluir esta imagem?');" class="d-grid">
+                {% csrf_token %}
+                <button type="submit" name="delete_image" value="{{ imagem.id }}" class="btn btn-sm btn-danger">
+                  <i class="bi bi-trash"></i> Excluir
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-12">
+          <p class="text-center text-muted py-4">Nenhuma imagem no banner. Use o formulário acima para adicionar a primeira!</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,209 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - JVC Turismo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+            overflow-x: hidden; /* Evita rolagem horizontal na página inteira */
+        }
+
+        /* --- SIDEBAR OTIMIZADA --- */
+        .sidebar {
+            height: 100vh; /* Ocupa a altura total da tela */
+            background-color: #212529; /* Dark Theme */
+            color: #fff;
+            width: 250px;
+            position: fixed; /* Fixa na esquerda */
+            top: 0;
+            left: 0;
+            overflow-y: auto; /* CRUCIAL: Adiciona rolagem se o menu for grande */
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+
+        /* Estilo da Barra de Rolagem (Fina e Discreta) */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+
+        /* Itens do Menu Compactos */
+        .sidebar .list-group-item {
+            background-color: transparent;
+            color: rgba(255, 255, 255, 0.75);
+            border: none;
+            padding: 8px 20px; /* Reduzi o espaçamento vertical */
+            font-size: 0.9rem; /* Letra levemente menor */
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar .list-group-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding-left: 25px; /* Efeitozinho de movimento */
+            border-left-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Cabeçalho do Menu */
+        .sidebar-header {
+            padding: 20px;
+            background-color: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Títulos das Seções (Pequenos e Discretos) */
+        .sidebar-heading {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 15px;
+            margin-bottom: 5px;
+            padding-left: 20px;
+            font-weight: bold;
+        }
+
+        /* Ícones do Menu */
+        .sidebar .list-group-item i {
+            font-size: 1rem;
+            width: 25px; /* Alinhamento fixo dos ícones */
+        }
+
+        /* --- CONTEÚDO PRINCIPAL --- */
+        .main-content {
+            margin-left: 250px; /* Mesma largura da sidebar */
+            padding: 30px;
+            transition: all 0.3s;
+            min-height: 100vh;
+        }
+
+        /* Responsividade (Celular) */
+        @media (max-width: 768px) {
+            .sidebar {
+                margin-left: -250px; /* Esconde por padrão no celular */
+            }
+            .sidebar.active {
+                margin-left: 0; /* Mostra quando ativo */
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar d-flex flex-column" id="sidebar-wrapper">
+        
+        <div class="sidebar-header">
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow" style="width: 35px; height: 35px;">
+                    JV
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold text-white">JVC Turismo</h6>
+                    <small class="text-white-50" style="font-size: 10px;">Painel de Controle</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="list-group list-group-flush my-2">
+            
+            <div class="sidebar-heading">Principal</div>
+            <a href="{% url 'painel' %}" class="list-group-item list-group-item-action">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+            <a href="{% url 'nova_reserva_manual' %}" class="list-group-item list-group-item-action text-warning fw-bold">
+                <i class="bi bi-plus-circle-fill"></i> Nova Reserva
+            </a>
+
+            <div class="sidebar-heading">Gestão</div>
+            <a href="{% url 'lista_clientes' %}" class="list-group-item list-group-item-action">
+                <i class="bi bi-people"></i> Clientes
+            </a>
+            <a href="{% url 'lista_praias' %}" class="list-group-item list-group-item-action">
+                <i class="bi bi-umbrella"></i> Praias / Passeios
+            </a>
+
+            <a href="{% url 'lista_transfers' %}" class="list-group-item list-group-item-action">
+    <i class="bi bi-car-front-fill me-2"></i> Transfers
+</a>
+            
+            <div class="sidebar-heading">Conteúdo & Site</div>
+            <a href="{% url 'lista_posts' %}" class="list-group-item list-group-item-action">
+                <i class="bi bi-journal-richtext"></i> Blog
+            </a>
+            <a href="{% url 'lista_depoimentos' %}" class="list-group-item list-group-item-action">
+                <i class="bi bi-chat-quote"></i> Depoimentos
+            </a>
+            <a href="{% url 'gerenciar_carrossel' %}" class="list-group-item list-group-item-action">
+                <i class="bi bi-images"></i> Banners (Carrossel)
+            </a>
+
+            <div class="sidebar-heading">Acesso</div>
+            <a href="{% url 'home' %}" target="_blank" class="list-group-item list-group-item-action">
+                <i class="bi bi-box-arrow-up-right"></i> Ver Site Público
+            </a>
+            
+            <form action="{% url 'logout' %}" method="post" class="mt-4 px-3 mb-4">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger w-100 btn-sm d-flex align-items-center justify-content-center gap-2">
+                    <i class="bi bi-power"></i> Sair do Sistema
+                </button>
+            </form>
+
+        </div>
+    </div>
+
+    <div class="main-content" id="page-content-wrapper">
+        <nav class="navbar navbar-light bg-white shadow-sm border rounded-3 mb-4 d-md-none">
+            <div class="container-fluid">
+                <button class="btn btn-primary btn-sm" id="sidebarToggle">
+                    <i class="bi bi-list"></i> Menu
+                </button>
+                <span class="fw-bold text-dark small">JVC Turismo</span>
+            </div>
+        </nav>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm border-0" role="alert">
+                    <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block dashboard_content %}
+        {% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const sidebarToggle = document.body.querySelector('#sidebarToggle');
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', event => {
+                event.preventDefault();
+                document.body.querySelector('#sidebar-wrapper').classList.toggle('active');
+            });
+        }
+    </script>
+</body>
+</html>

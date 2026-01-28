@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container text-center py-5">
+    <h1 class="display-5 text-danger">Falha no Pagamento</h1>
+    <p class="lead">Houve um problema ao processar seu pagamento. Por favor, tente novamente ou entre em contato.</p>
+    <a href="{% url 'home' %}" class="btn btn-primary">Voltar para o Início</a>
+  </div>
+{% endblock %}
