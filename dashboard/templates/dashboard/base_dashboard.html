@@ -125,50 +125,60 @@
 
         <div class="list-group list-group-flush my-2">
             
-            <div class="sidebar-heading">Principal</div>
-            <a href="{% url 'painel' %}" class="list-group-item list-group-item-action">
-                <i class="bi bi-speedometer2"></i> Dashboard
-            </a>
-            <a href="{% url 'nova_reserva_manual' %}" class="list-group-item list-group-item-action text-warning fw-bold">
-                <i class="bi bi-plus-circle-fill"></i> Nova Reserva
-            </a>
+    <div class="sidebar-heading">Principal</div>
+    <a href="{% url 'painel' %}" class="list-group-item list-group-item-action">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </a>
+    <a href="{% url 'nova_reserva_manual' %}" class="list-group-item list-group-item-action text-warning fw-bold">
+        <i class="bi bi-plus-circle-fill"></i> Nova Reserva
+    </a>
 
-            <div class="sidebar-heading">Gestão</div>
-            <a href="{% url 'lista_clientes' %}" class="list-group-item list-group-item-action">
-                <i class="bi bi-people"></i> Clientes
-            </a>
-            <a href="{% url 'lista_praias' %}" class="list-group-item list-group-item-action">
-                <i class="bi bi-umbrella"></i> Praias / Passeios
-            </a>
+    <div class="sidebar-heading">Gestão</div>
+    <a href="{% url 'lista_clientes' %}" class="list-group-item list-group-item-action">
+        <i class="bi bi-people"></i> Clientes
+    </a>
+    
+    <a href="{% url 'lista_parceiros' %}" class="list-group-item list-group-item-action">
+        <i class="bi bi-person-badge"></i> Parceiros
+    </a>
 
-            <a href="{% url 'lista_transfers' %}" class="list-group-item list-group-item-action">
-    <i class="bi bi-car-front-fill me-2"></i> Transfers
-</a>
-            
-            <div class="sidebar-heading">Conteúdo & Site</div>
-            <a href="{% url 'lista_posts' %}" class="list-group-item list-group-item-action">
-                <i class="bi bi-journal-richtext"></i> Blog
-            </a>
-            <a href="{% url 'lista_depoimentos' %}" class="list-group-item list-group-item-action">
-                <i class="bi bi-chat-quote"></i> Depoimentos
-            </a>
-            <a href="{% url 'gerenciar_carrossel' %}" class="list-group-item list-group-item-action">
-                <i class="bi bi-images"></i> Banners (Carrossel)
-            </a>
+    <a href="{% url 'lista_praias' %}" class="list-group-item list-group-item-action">
+        <i class="bi bi-umbrella"></i> Praias / Passeios
+    </a>
+    
+    <a href="{% url 'lista_transfers' %}" class="list-group-item list-group-item-action">
+        <i class="bi bi-car-front-fill me-2"></i> Transfers
+    </a>
 
-            <div class="sidebar-heading">Acesso</div>
-            <a href="{% url 'home' %}" target="_blank" class="list-group-item list-group-item-action">
-                <i class="bi bi-box-arrow-up-right"></i> Ver Site Público
-            </a>
-            
-            <form action="{% url 'logout' %}" method="post" class="mt-4 px-3 mb-4">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-outline-danger w-100 btn-sm d-flex align-items-center justify-content-center gap-2">
-                    <i class="bi bi-power"></i> Sair do Sistema
-                </button>
-            </form>
+    <div class="sidebar-heading">Financeiro</div>
+    <a href="{% url 'recibo_manual' %}" class="list-group-item list-group-item-action">
+        <i class="bi bi-receipt"></i> Gerar Recibo
+    </a>
+    
+    <div class="sidebar-heading">Conteúdo & Site</div>
+    <a href="{% url 'lista_posts' %}" class="list-group-item list-group-item-action">
+        <i class="bi bi-journal-richtext"></i> Blog
+    </a>
+    <a href="{% url 'lista_depoimentos' %}" class="list-group-item list-group-item-action">
+        <i class="bi bi-chat-quote"></i> Depoimentos
+    </a>
+    <a href="{% url 'gerenciar_carrossel' %}" class="list-group-item list-group-item-action">
+        <i class="bi bi-images"></i> Banners (Carrossel)
+    </a>
 
-        </div>
+    <div class="sidebar-heading">Acesso</div>
+    <a href="{% url 'home' %}" target="_blank" class="list-group-item list-group-item-action">
+        <i class="bi bi-box-arrow-up-right"></i> Ver Site Público
+    </a>
+    
+    <form action="{% url 'logout' %}" method="post" class="mt-4 px-3 mb-4">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger w-100 btn-sm d-flex align-items-center justify-content-center gap-2">
+            <i class="bi bi-power"></i> Sair do Sistema
+        </button>
+    </form>
+
+</div>
     </div>
 
     <div class="main-content" id="page-content-wrapper">

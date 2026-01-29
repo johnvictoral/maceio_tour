@@ -3,7 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from django.http import HttpResponse
+from django.template.loader import render_to_string
 from django.db.models import Q
+from weasyprint import HTML
 from django.contrib.auth.views import LoginView # <--- ESSA LINHA RESOLVE O SEU ERRO ATUAL
 from django.utils.text import slugify
 # Seus formulários

@@ -51,4 +51,15 @@ path('depoimentos/excluir/<int:depoimento_id>/', views.excluir_depoimento, name=
     path('transfers/editar/<int:transfer_id>/', views.editar_transfer, name='editar_transfer'),
     path('transfers/excluir/<int:transfer_id>/', views.excluir_transfer, name='excluir_transfer'),
     path('reservas/', views.lista_reservas, name='lista_reservas'),
+
+    # Rota de Parceiros
+    path('parceiros/', views.lista_parceiros, name='lista_parceiros'),
+    path('parceiros/excluir/<int:guia_id>/', views.excluir_parceiro, name='excluir_parceiro'),
+
+    # --- AQUI ESTÁ A CORREÇÃO DO ERRO ---
+    # O 'name' deve ser igual ao que está no menu lateral (recibo_manual)
+    path('financeiro/recibo/', views.gerar_recibo_manual, name='recibo_manual'),
+    
+    # Rota para o recibo da reserva (Automático)
+    path('reservas/recibo/<int:reserva_id>/', views.gerar_recibo_pdf, name='gerar_recibo_pdf'),
 ]
