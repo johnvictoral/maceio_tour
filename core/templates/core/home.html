@@ -184,7 +184,7 @@
 <section id="blog-home" class="py-5 bg-light">
   <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-5">
-        <h2 class="fw-bold">Dicas de Viagem</h2>
+        <h2 class="fw-bold">Notícias e Dicas de Viagens</h2>
         <a href="{% url 'lista_de_posts' %}" class="btn btn-link text-decoration-none fw-bold">Ver tudo <i class="bi bi-arrow-right"></i></a>
     </div>
     <div class="row g-4">
@@ -193,7 +193,7 @@
           <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
             {% if post.imagem_destaque %}<img src="{{ post.imagem_destaque.url }}" class="card-img-top" style="height: 220px; object-fit: cover;">{% endif %}
             <div class="card-body p-4">
-              <small class="text-primary fw-bold text-uppercase" style="font-size: 0.75rem;">Blog JVC</small>
+              <small class="text-primary fw-bold text-uppercase" style="font-size: 0.75rem;">Blog</small>
               <h5 class="card-title fw-bold mt-2 mb-3"><a href="{% url 'detalhe_do_post' slug=post.slug %}" class="text-dark text-decoration-none stretched-link">{{ post.titulo }}</a></h5>
               <p class="card-text text-muted small">{{ post.conteudo|truncatewords:20|striptags }}</p>
             </div>
@@ -207,7 +207,7 @@
   </div>
 </section>
 
-<a href="https://wa.me/5582999999999" class="btn-whatsapp-float" target="_blank"><i class="bi bi-whatsapp"></i></a>
+<a href="https://wa.me/5582999325548" class="btn-whatsapp-float" target="_blank"><i class="bi bi-whatsapp"></i></a>
 
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
