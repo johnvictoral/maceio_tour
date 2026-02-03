@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -5,86 +6,110 @@
     <title>Recibo - {{ recibo.numero_recibo }}</title>
     <style>
         @page { size: A4; margin: 1.5cm; }
-        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #333; font-size: 12pt; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { margin: 0; font-size: 22px; color: #555; }
-        .header p { margin: 5px 0; font-size: 12px; }
-        .section-title { background-color: #f2f2f2; padding: 10px; font-size: 14pt; border-left: 5px solid #0d6efd; margin-top: 25px; margin-bottom: 15px; font-weight: bold; }
-        .details-table { width: 100%; border-collapse: collapse; }
-        .details-table td { padding: 10px 0; border-bottom: 1px solid #ddd; vertical-align: top; }
-        .details-table .label { font-weight: bold; width: 30%; }
-        .footer { text-align: center; position: fixed; bottom: 40px; left: 0; right: 0; font-size: 10pt; color: #777; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #333; font-size: 11px; line-height: 1.4; }
+        
+        /* --- CABEÇALHO IGUAL AO VOUCHER --- */
+        .header-table {
+            width: 100%;
+            border-bottom: 2px solid #117864;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .company-title { font-size: 18px; font-weight: bold; color: #117864; text-transform: uppercase; }
+        .company-subtitle { font-size: 10px; color: #555; }
+        
+        .recibo-title { font-size: 24px; font-weight: bold; text-align: right; color: #333; }
+        .recibo-number { font-size: 14px; text-align: right; color: #777; }
 
-        /* --- ESTILOS NOVOS --- */
+        /* --- TABELAS --- */
+        .details-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .details-table td { padding: 12px 5px; border-bottom: 1px solid #ddd; vertical-align: top; }
+        .details-table .label { font-weight: bold; width: 25%; color: #555; text-transform: uppercase; font-size: 10px; }
+        .details-table .value { font-size: 12px; font-weight: bold; color: #000; }
+
+        /* --- VALOR --- */
         .valor-destaque {
             margin-top: 30px;
             padding: 15px;
             text-align: center;
-            border: 2px solid #0d6efd;
-            background-color: #f8f9fa;
-            border-radius: 5px;
+            border: 2px dashed #117864;
+            background-color: #f0fdf4;
+            border-radius: 8px;
         }
-        .valor-destaque p {
-            margin: 0;
-            font-size: 14pt;
-            text-transform: uppercase;
-            color: #555;
-            font-weight: bold;
-        }
-        .valor-destaque h2 {
-            margin: 5px 0 0 0;
-            font-size: 28pt;
-            color: #0d6efd;
-        }
-        .assinatura-section {
-            margin-top: 80px; /* Mais espaço para a assinatura */
-            text-align: center;
-        }
-        .linha-assinatura {
-            width: 350px;
-            border-bottom: 1px solid #333;
-            margin: 0 auto;
-        }
-        .assinatura-section p {
-            margin-top: 5px;
-            font-size: 11pt;
+        .valor-destaque p { margin: 0; font-size: 10px; text-transform: uppercase; color: #555; font-weight: bold; }
+        .valor-destaque h2 { margin: 5px 0 0 0; font-size: 26pt; color: #117864; }
+
+        /* --- ASSINATURA --- */
+        .assinatura-section { margin-top: 80px; text-align: center; }
+        .linha-assinatura { width: 350px; border-bottom: 1px solid #333; margin: 0 auto; }
+        .assinatura-section p { margin-top: 5px; font-size: 10px; text-transform: uppercase; }
+
+        /* --- RODAPÉ --- */
+        .footer { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            text-align: center; font-size: 9px; color: #999; 
+            border-top: 1px solid #eee; padding-top: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>JVC Receptivo</h1>
-        <p>CNPJ: {{ recibo.cnpj_emitente }}</p>
-    </div>
 
-    <h2>Recibo de Pagamento</h2>
-    <p><strong>Número do Recibo:</strong> #{{ recibo.numero_recibo }}</p>
+    <table class="header-table">
+        <tr>
+            <td width="20%" valign="middle">
+                <img src="file://{{ logo_path }}" style="height: 60px; width: auto;">
+            </td>
+            
+            <td width="50%" valign="middle">
+                <div class="company-title">Vá com John</div>
+                <div class="company-subtitle">Receptivo & Turismo em Alagoas</div>
+                <div style="font-size: 9px; margin-top: 4px;">CNPJ: 33.780.923/0001-62</div>
+            </td>
 
-    <h3 class="section-title">Informações</h3>
+            <td width="30%" valign="middle" align="right">
+                <div class="recibo-title">RECIBO</div>
+                <div class="recibo-number">Nº {{ recibo.numero_recibo|default:"AVULSO" }}</div>
+                <div style="font-size: 10px; margin-top: 5px;">Emissão: {% now "d/m/Y" %}</div>
+            </td>
+        </tr>
+    </table>
+
     <table class="details-table">
-        <tr><td class="label">Recebemos de:</td><td>{{ recibo.recebemos_de }}</td></tr>
-        <tr><td class="label">Serviço Prestado:</td><td>{{ recibo.servico_prestado|linebreaksbr }}</td></tr>
-        <tr><td class="label">Forma de Pagamento:</td><td>{{ recibo.forma_pagamento }}</td></tr>
-        <tr><td class="label">Data do Serviço:</td><td>{{ recibo.data_viagem|date:"d/m/Y" }}</td></tr>
-        <tr><td class="label">Trajeto:</td><td>{{ recibo.origem }} → {{ recibo.destino }}</td></tr>
-        {% if recibo.observacoes %}
-        <tr><td class="label">Observações:</td><td>{{ recibo.observacoes|linebreaksbr }}</td></tr>
-        {% endif %}
+        <tr>
+            <td class="label">Recebemos de:</td>
+            <td class="value">{{ recibo.nome_cliente }}</td>
+        </tr>
+        <tr>
+            <td class="label">A Importância de:</td>
+            <td class="value" style="color: #117864;">R$ {{ recibo.valor|floatformat:2 }}</td>
+        </tr>
+        <tr>
+            <td class="label">Referente a:</td>
+            <td class="value">{{ recibo.servico|linebreaksbr }}</td>
+        </tr>
+        <tr>
+            <td class="label">Data do Serviço/Pagamento:</td>
+            <td class="value">{{ recibo.data|date:"d/m/Y" }}</td>
+        </tr>
     </table>
 
     <div class="valor-destaque">
-        <p>Valor Recebido</p>
+        <p>Valor Total Recebido</p>
         <h2>R$ {{ recibo.valor|floatformat:2 }}</h2>
     </div>
 
+    <div style="margin-top: 20px; font-size: 10px; text-align: justify; color: #555;">
+        Declaramos para os devidos fins que recebemos a importância acima descrita, dando plena e rasa quitação.
+    </div>
+
     <div class="assinatura-section">
-    <div class="linha-assinatura"></div>
-    <p><strong>Assinatura do Recebedor</strong></p>
-</div>
+        <div class="linha-assinatura"></div>
+        <p><strong>Vá com John Receptivo & Turismo</strong><br>CNPJ 33.780.923/0001-62</p>
+    </div>
 
     <div class="footer">
-        
-        <p>Este é um recibo de pagamento e não um comprovante fiscal.</p>
+        <p>Maceió - Alagoas • (82) 99999-9999<br>Este documento não substitui nota fiscal para fins tributários.</p>
     </div>
+
 </body>
 </html>

@@ -205,11 +205,16 @@
                         </td>
                         <td class="text-end pe-4">
                             <div class="d-flex justify-content-end gap-1">
-                                <a href="{% url 'gerar_voucher' reserva_id=reserva.id %}" target="_blank" class="btn btn-light btn-sm rounded-circle text-dark" title="Imprimir Voucher">
-                                    <i class="bi bi-printer-fill"></i>
+                                
+                                <a href="{% url 'gerar_recibo_pdf' reserva_id=reserva.id %}" target="_blank" class="btn btn-light btn-sm rounded-circle text-primary border" title="Imprimir Contrato/Voucher">
+                                    <i class="bi bi-file-earmark-text-fill"></i>
                                 </a>
 
-                                <a href="{% url 'detalhe_reserva' reserva_id=reserva.id %}" class="btn btn-light btn-sm rounded-circle text-primary" title="Ver Detalhes">
+                                <a href="{% url 'gerar_recibo_financeiro' reserva_id=reserva.id %}" target="_blank" class="btn btn-light btn-sm rounded-circle text-success border" title="Imprimir Recibo de Pagamento">
+                                    <i class="bi bi-cash-stack"></i>
+                                </a>
+
+                                <a href="{% url 'detalhe_reserva' reserva_id=reserva.id %}" class="btn btn-light btn-sm rounded-circle text-secondary" title="Ver Detalhes">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 

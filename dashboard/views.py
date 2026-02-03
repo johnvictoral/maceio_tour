@@ -1,4 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
+import base64
+import os              # <--- ADICIONE
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
@@ -196,12 +199,36 @@ def excluir_parceiro(request, guia_id):
 @login_required
 def gerar_recibo_pdf(request, reserva_id):
     reserva = get_object_or_404(Reserva, id=reserva_id)
-    context = {'reserva': reserva, 'user': request.user}
-    html_string = render_to_string('dashboard/recibo_template.html', context)
+    
+    # 1. Tenta achar a imagem
+    if settings.DEBUG:
+        img_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo.png')
+    else:
+        img_path = os.path.join(settings.STATIC_ROOT, 'images', 'logo.png')
+        if not os.path.exists(img_path):
+             img_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo.png')
+    
+    # 2. Converte a imagem para Base64 (Texto)
+    logo_data = ""
+    if os.path.exists(img_path):
+        with open(img_path, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+        logo_data = f"data:image/png;base64,{encoded_string}"
+    
+    # 3. Manda para o HTML
+    context = {
+        'reserva': reserva,
+        'user': request.user,
+        'logo_data': logo_data # <--- Agora usamos 'logo_data'
+    }
+    
+    html_string = render_to_string('dashboard/voucher_pdf.html', context)
+    
     html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
     pdf = html.write_pdf()
+    
     response = HttpResponse(pdf, content_type='application/pdf')
-    filename = f'recibo_reserva_{reserva.id}.pdf'
+    filename = f'voucher_reserva_{reserva.id}.pdf'
     response['Content-Disposition'] = f'inline; filename="{filename}"'
     return response
 
@@ -211,16 +238,75 @@ def gerar_recibo_manual(request):
         form = ReciboManualForm(request.POST)
         if form.is_valid():
             dados_recibo = form.cleaned_data
-            html_string = render_to_string('dashboard/recibo_manual_pdf.html', {'recibo': dados_recibo, 'user': request.user})
+            
+            # --- LÓGICA DA IMAGEM TAMBÉM NO MANUAL ---
+            if settings.DEBUG:
+                logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo.png')
+            else:
+                logo_path = os.path.join(settings.STATIC_ROOT, 'images', 'logo.png')
+                if not os.path.exists(logo_path):
+                     logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo.png')
+            # -----------------------------------------
+
+            # Adiciona a logo ao contexto
+            context = {
+                'recibo': dados_recibo, 
+                'user': request.user,
+                'logo_path': logo_path 
+            }
+
+            html_string = render_to_string('dashboard/recibo_manual_pdf.html', context)
+            
             html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
             pdf = html.write_pdf()
+            
             response = HttpResponse(pdf, content_type='application/pdf')
-            filename = f"recibo_{dados_recibo['numero_recibo']}.pdf"
+            # Tratamento seguro para o nome do arquivo (caso não tenha número)
+            num_recibo = dados_recibo.get('numero_recibo') or 'avulso'
+            filename = f"recibo_{num_recibo}.pdf"
+            
             response['Content-Disposition'] = f'inline; filename="{filename}"'
             return response
     else:
         form = ReciboManualForm()
+    
     return render(request, 'dashboard/gerar_recibo_manual.html', {'form': form})
+
+@login_required
+def gerar_recibo_financeiro(request, reserva_id):
+    # Pega a reserva
+    reserva = get_object_or_404(Reserva, id=reserva_id)
+    
+    # Lógica da Imagem (Base64) - A mesma que usamos no voucher
+    if settings.DEBUG:
+        img_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo.png')
+    else:
+        img_path = os.path.join(settings.STATIC_ROOT, 'images', 'logo.png')
+        if not os.path.exists(img_path):
+             img_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo.png')
+    
+    logo_data = ""
+    if os.path.exists(img_path):
+        with open(img_path, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+        logo_data = f"data:image/png;base64,{encoded_string}"
+    
+    context = {
+        'reserva': reserva,
+        'user': request.user,
+        'logo_data': logo_data 
+    }
+    
+    # ATENÇÃO: Chama um HTML novo (recibo_pagamento.html) para não mexer no voucher
+    html_string = render_to_string('dashboard/recibo_pagamento.html', context)
+    
+    html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
+    pdf = html.write_pdf()
+    
+    response = HttpResponse(pdf, content_type='application/pdf')
+    filename = f'recibo_pagamento_{reserva.id}.pdf'
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    return response
 
 @login_required
 def calendario_view(request):
