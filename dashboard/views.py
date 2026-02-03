@@ -6,6 +6,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from django.http import HttpResponse
+from django.db.models import Sum
+from django.db.models.functions import TruncMonth
+import datetime
 from django.template.loader import render_to_string
 from django.db.models import Q
 from weasyprint import HTML
@@ -38,54 +41,81 @@ class CustomLoginView(LoginView):
 
 @login_required
 def painel(request):
-    # 1. Pegamos os dados que vêm do filtro (URL)
+    # 1. Configurações de Data
+    hoje = timezone.now()
+    mes_atual = hoje.month
+    ano_atual = hoje.year
+
+    # 2. Query Base (mantém seus filtros)
     status_filtro = request.GET.get('status')
     data_filtro = request.GET.get('data')
     busca = request.GET.get('busca')
 
-    # 2. Query Base: Começamos pegando TUDO ordenado por data
-    reservas = Reserva.objects.all().order_by('data_agendamento')
+    reservas = Reserva.objects.all().order_by('-data_agendamento') # Mais recentes primeiro
 
-    # --- LÓGICA DE FILTROS ---
-
-    # A. Filtro por STATUS
     if status_filtro:
-        # Se o usuário escolheu um status específico, mostramos ele
         reservas = reservas.filter(status=status_filtro)
     elif not data_filtro and not busca:
-        # Se NÃO tem filtro nenhum (acabou de entrar na página),
-        # mostramos apenas o padrão do dashboard: Pendente e Confirmado
         reservas = reservas.filter(status__in=['pendente', 'confirmado'])
 
-    # B. Filtro por DATA
     if data_filtro:
         reservas = reservas.filter(data_agendamento__date=data_filtro)
-
-    # C. Filtro de BUSCA (Nome, Email ou ID)
+    
     if busca:
         reservas = reservas.filter(
             Q(cliente__nome__icontains=busca) | 
             Q(cliente__email__icontains=busca) |
+            Q(codigo__icontains=busca) |
             Q(id__icontains=busca)
         )
 
-    # --- FIM DA LÓGICA ---
+    # --- 3. CÁLCULOS FINANCEIROS (KPIs) ---
+    
+    # Faturamento deste Mês (Soma CONFIRMADO e CONCLUIDO)
+    faturamento_mes = Reserva.objects.filter(
+        data_agendamento__month=mes_atual,
+        data_agendamento__year=ano_atual,
+        status__in=['confirmado', 'concluido']
+    ).aggregate(Sum('valor'))['valor__sum'] or 0  # O 'or 0' serve para não quebrar se for None
 
-    # 3. KPIs (Contadores do topo da tela)
-    # Estes NÃO mudam com o filtro, mostram sempre o total geral
-    context = {
-        'reservas': reservas, # A lista filtrada
+    # Reservas de Hoje (Qualquer status, para operação)
+    reservas_hoje = Reserva.objects.filter(data_agendamento__date=hoje.date()).count()
+    
+    # Pendências (Para você correr atrás)
+    reservas_pendentes = Reserva.objects.filter(status='pendente').count()
+
+    # --- 4. DADOS PARA O GRÁFICO (Últimos 6 meses) ---
+    # Isso cria uma lista com o faturamento mês a mês
+    dados_grafico = []
+    labels_grafico = []
+    
+    for i in range(5, -1, -1): # Loop dos últimos 6 meses
+        data_ref = hoje - datetime.timedelta(days=i*30)
+        fat_mensal = Reserva.objects.filter(
+            data_agendamento__month=data_ref.month,
+            data_agendamento__year=data_ref.year,
+            status__in=['confirmado', 'concluido']
+        ).aggregate(Sum('valor'))['valor__sum'] or 0
         
-        # Filtros (para o HTML lembrar o que foi selecionado)
+        # Cria os arrays para o Chart.js
+        dados_grafico.append(float(fat_mensal)) # O gráfico precisa de float, não decimal
+        labels_grafico.append(data_ref.strftime("%B/%Y")) # Ex: Fevereiro/2026
+
+    context = {
+        'reservas': reservas,
         'status_filtro': status_filtro,
         'data_filtro': data_filtro,
         'busca': busca,
-
-        # Contadores (KPIs)
-        'reservas_hoje': Reserva.objects.filter(data_agendamento__date=timezone.now().date()).count(),
-        'reservas_pendentes': Reserva.objects.filter(status='pendente').count(),
-        'faturamento_mes': 0, # Sua lógica de faturamento
+        
+        # Passando os valores calculados
+        'reservas_hoje': reservas_hoje,
+        'reservas_pendentes': reservas_pendentes,
+        'faturamento_mes': faturamento_mes,
         'total_clientes': Cliente.objects.count(),
+        
+        # Passando dados para o gráfico
+        'labels_grafico': labels_grafico,
+        'dados_grafico': dados_grafico,
     }
     
     return render(request, 'dashboard/painel.html', context)

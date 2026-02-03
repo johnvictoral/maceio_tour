@@ -10,8 +10,34 @@
   </div>
   <div class="d-flex flex-wrap gap-2">
     <a href="{% url 'editar_reserva' reserva_id=reserva.id %}" class="btn btn-warning" title="Editar Reserva"><i class="bi bi-pencil-fill"></i><span class="d-none d-sm-inline ms-1">Editar</span></a>
-    <a href="https://wa.me/{{ reserva.cliente.telefone|format_whatsapp_number }}?text={% filter urlencode %}Olá, {{ reserva.cliente.nome }}! Estou passando para confirmar seu {{ reserva.get_tipo_display|lower }} para {% if reserva.tipo == 'passeio' %}{{ reserva.praia_destino.nome }}{% else %}{{ reserva.local_chegada }}{% endif %} no dia {{ reserva.data_agendamento|date:"d/m/Y" }} às {{ reserva.data_agendamento|date:"H:i" }}h.{% endfilter %}" 
-       target="_blank" class="btn btn-success" title="Confirmar via WhatsApp"><i class="bi bi-whatsapp"></i><span class="d-none d-sm-inline ms-1">Confirmar</span></a>
+    
+    <a href="https://wa.me/{{ reserva.cliente.telefone|format_whatsapp_number }}?text={% filter urlencode %}
+Olá, *{{ reserva.cliente.nome }}*! Tudo bem? 👋
+
+Aqui é da *Vá com John*. Passando para confirmar os detalhes da sua reserva:
+
+📋 *Localizador:* #{{ reserva.codigo }}
+🗓️ *Data:* {{ reserva.data_agendamento|date:"d/m/Y" }}
+⏰ *Horário:* {{ reserva.data_agendamento|date:"H:i" }}
+{% if reserva.tipo == 'passeio' %}
+🏖️ *Passeio:* {{ reserva.praia_destino.nome }}
+📍 *Saída:* {{ reserva.local_partida }}
+{% else %}
+🚗 *Transfer:* {{ reserva.local_partida }} ➡️ {{ reserva.local_chegada }}
+✈️ *Voo:* {{ reserva.informacoes_voo|default:"Não informado" }}
+{% endif %}
+👥 *Passageiros:* {{ reserva.numero_passageiros }}
+💰 *Valor:* R$ {{ reserva.valor|floatformat:2 }}
+
+{% if reserva.guia %}
+👤 *Guia Responsável:* {{ reserva.guia.nome }} - {{ reserva.guia.modelo_carro }} ({{ reserva.guia.placa_carro }})
+{% endif %}
+
+Qualquer dúvida, estou à disposição!
+{% endfilter %}" 
+       target="_blank" class="btn btn-success" title="Confirmar via WhatsApp">
+       <i class="bi bi-whatsapp"></i><span class="d-none d-sm-inline ms-1">Confirmar (Pro)</span>
+    </a>
     <a href="{% url 'gerar_recibo_pdf' reserva_id=reserva.id %}" target="_blank" class="btn btn-info text-white" title="Gerar Voucher"><i class="bi bi-file-earmark-text"></i><span class="d-none d-sm-inline ms-1">Voucher</span></a>
     <a href="{% url 'gerar_recibo_financeiro' reserva_id=reserva.id %}" target="_blank" class="btn btn-success text-white" title="Gerar Recibo Pagamento"><i class="bi bi-cash-stack"></i><span class="d-none d-sm-inline ms-1">Recibo</span></a>
     <a href="{% url 'painel' %}" class="btn btn-secondary" title="Voltar para a Lista"><i class="bi bi-arrow-left-circle"></i><span class="d-none d-sm-inline ms-1">Voltar</span></a>

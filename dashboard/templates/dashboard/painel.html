@@ -3,6 +3,8 @@
 
 {% block dashboard_content %}
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
     /* Estilos dos Cards e Tabela */
     .stat-card {
@@ -99,8 +101,8 @@
                     <i class="bi bi-currency-dollar"></i>
                 </div>
                 <div>
-                    <h6 class="text-muted text-uppercase mb-1 small fw-bold">Faturamento (Mês)</h6>
-                    <h2 class="mb-0 fw-bold">R$ {{ faturamento_mes|floatformat:0 }}</h2>
+                    <h6 class="text-muted text-uppercase mb-1 small fw-bold">Faturamento ({% now "M" %})</h6>
+                    <h2 class="mb-0 fw-bold text-success">R$ {{ faturamento_mes|floatformat:2 }}</h2>
                 </div>
             </div>
         </div>
@@ -120,37 +122,52 @@
     </div>
 </div>
 
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-bottom-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">Desempenho Financeiro</h5>
+                <small class="text-muted">Últimos 6 meses</small>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card table-card shadow-sm mb-5">
     <div class="card-header bg-white border-bottom-0 pt-4 px-4">
         <h5 class="fw-bold mb-3">Últimas Reservas</h5>
         
         <form method="GET" class="row g-3 mb-4 align-items-end">
     
-    <div class="col-md-4">
-        <label class="form-label fw-bold small text-muted">Buscar</label>
-        <input type="text" name="busca" class="form-control" placeholder="Cliente ou ID..." value="{{ busca|default:'' }}">
-    </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold small text-muted">Buscar</label>
+                <input type="text" name="busca" class="form-control" placeholder="Cliente, Código ou ID..." value="{{ busca|default:'' }}">
+            </div>
 
-    <div class="col-md-3">
-        <label class="form-label fw-bold small text-muted">Status</label>
-        <select name="status" class="form-select">
-            <option value="">Padrão (Pendente/Confirmado)</option> <option value="pendente" {% if status_filtro == 'pendente' %}selected{% endif %}>Pendente</option>
-            <option value="confirmado" {% if status_filtro == 'confirmado' %}selected{% endif %}>Confirmado</option>
-            <option value="concluido" {% if status_filtro == 'concluido' %}selected{% endif %}>Concluído</option>
-            <option value="cancelado" {% if status_filtro == 'cancelado' %}selected{% endif %}>Cancelado</option>
-        </select>
-    </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold small text-muted">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">Padrão (Pendente/Confirmado)</option> 
+                    <option value="pendente" {% if status_filtro == 'pendente' %}selected{% endif %}>Pendente</option>
+                    <option value="confirmado" {% if status_filtro == 'confirmado' %}selected{% endif %}>Confirmado</option>
+                    <option value="concluido" {% if status_filtro == 'concluido' %}selected{% endif %}>Concluído</option>
+                    <option value="cancelado" {% if status_filtro == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                </select>
+            </div>
 
-    <div class="col-md-3">
-        <label class="form-label fw-bold small text-muted">Data</label>
-        <input type="date" name="data" class="form-control" value="{{ data_filtro|default:'' }}">
-    </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold small text-muted">Data</label>
+                <input type="date" name="data" class="form-control" value="{{ data_filtro|default:'' }}">
+            </div>
 
-    <div class="col-md-2 d-flex gap-2">
-        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-funnel"></i></button>
-        <a href="{% url 'painel' %}" class="btn btn-light border" title="Limpar Filtros"><i class="bi bi-x-lg"></i></a>
-    </div>
-</form>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-funnel"></i></button>
+                <a href="{% url 'painel' %}" class="btn btn-light border" title="Limpar Filtros"><i class="bi bi-x-lg"></i></a>
+            </div>
+        </form>
     </div>
 
     <div class="card-body px-0 pt-0">
@@ -175,7 +192,7 @@
                                 </div>
                                 <div>
                                     <div class="fw-bold text-dark">{{ reserva.cliente.nome }}</div>
-                                    <small class="text-muted">{{ reserva.cliente.telefone }}</small>
+                                    <small class="text-muted">#{{ reserva.codigo }}</small>
                                 </div>
                             </div>
                         </td>
@@ -240,5 +257,76 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var ctx = document.getElementById('revenueChart').getContext('2d');
+        
+        // Dados vindos do Django (views.py)
+        var labels = {{ labels_grafico|safe }};
+        var dataValues = {{ dados_grafico|safe }};
+
+        var myChart = new Chart(ctx, {
+            type: 'line', // Tipo do gráfico: Linha
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Faturamento (R$)',
+                    data: dataValues,
+                    backgroundColor: 'rgba(25, 135, 84, 0.1)', // Verde transparente
+                    borderColor: '#198754', // Verde Bootstrap Success
+                    borderWidth: 2,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#198754',
+                    pointRadius: 4,
+                    tension: 0.3, // Curvatura da linha
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false // Esconde a legenda para ficar mais limpo
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            borderDash: [2, 4],
+                            color: '#e9ecef'
+                        },
+                        ticks: {
+                            callback: function(value, index, values) {
+                                return 'R$ ' + value;
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
 
 {% endblock %}
