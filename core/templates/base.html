@@ -132,8 +132,8 @@
     <nav class="navbar navbar-expand-lg fixed-top shadow-sm" id="mainNav">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
-    <img src="{% static 'images/logo.png' %}" alt="JVC Receptivo" height="50" style="width: auto;">
-</a>
+                <img src="{% static 'images/logo.png' %}" alt="JVC Receptivo" height="50" style="width: auto;">
+            </a>
             
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#main-nav">
                 <span class="navbar-toggler-icon"></span>
@@ -146,6 +146,13 @@
                     <li class="nav-item"><a class="nav-link" href="/#transfers-section">Transfers</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'tabua_de_mares' %}">Tábua de Marés</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'lista_de_posts' %}">Blog</a></li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link text-primary" href="{% url 'consultar_reserva' %}">
+                            <i class="bi bi-ticket-perforated me-1"></i>Minha Reserva
+                        </a>
+                    </li>
+                    
                     <li class="nav-item"><a class="nav-link" href="{% url 'sobre_nos' %}">Sobre</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'contato' %}">Contato</a></li>
                 </ul>
@@ -192,6 +199,7 @@
                 <li class="mb-2"><a href="{% url 'home' %}" class="text-white-50">Início</a></li>
                 <li class="mb-2"><a href="/#passeios" class="text-white-50">Passeios</a></li>
                 <li class="mb-2"><a href="/#transfers-section" class="text-white-50">Transfers</a></li>
+                <li class="mb-2"><a href="{% url 'consultar_reserva' %}" class="text-white-50">Minha Reserva</a></li>
                 <li class="mb-2"><a href="{% url 'contato' %}" class="text-white-50">Fale Conosco</a></li>
             </ul>
           </div>
@@ -220,7 +228,7 @@
 
         <div class="row align-items-center">
           <div class="col-md-6 text-center text-md-start">
-            <p class="small mb-0 text-white-50">&copy; {% now "Y" %} <strong>JVC Receptivo</strong>. Todos os direitos reservados.</p>
+            <p class="small mb-0 text-white-50">&copy; {% now "Y" %} <strong>Vá com John Turismo e Receptivo</strong>. Todos os direitos reservados.</p>
           </div>
           <div class="col-md-6 text-center text-md-end">
             <p class="small mb-0 text-white-50">Desenvolvido com <i class="bi bi-heart-fill text-danger" style="font-size: 10px;"></i> em Alagoas</p>

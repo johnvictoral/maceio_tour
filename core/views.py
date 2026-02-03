@@ -3,6 +3,7 @@ from django.shortcuts import render, get_object_or_404,redirect
 from .models import ImagemCarrossel, Praia,Transfer,Depoimento,Post
 from .forms import ClientePublicoForm, ReservaPublicaForm
 from django.contrib import messages
+from .models import Reserva
 from django.conf import settings
 from .mares_data import DADOS_MARES_2026
 import os
@@ -236,3 +237,25 @@ def fazer_reserva_transfer(request, transfer_id):
 
 def reserva_confirmada(request):
     return render(request, 'core/confirmacao.html')
+
+def consultar_reserva(request):
+    reserva = None
+    erro = None
+    
+    if request.method == 'POST':
+        codigo_busca = request.POST.get('codigo', '').strip().upper().replace('#', '')
+        sobrenome_busca = request.POST.get('sobrenome', '').strip()
+        
+        if codigo_busca and sobrenome_busca:
+            try:
+                # Busca reserva que tenha esse código E esse sobrenome (segurança)
+                reserva = Reserva.objects.get(
+                    codigo=codigo_busca, 
+                    cliente__sobrenome__iexact=sobrenome_busca
+                )
+            except Reserva.DoesNotExist:
+                erro = "Reserva não encontrada. Verifique o código e o sobrenome."
+        else:
+            erro = "Preencha todos os campos."
+
+    return render(request, 'core/minha_reserva.html', {'reserva': reserva, 'erro': erro})

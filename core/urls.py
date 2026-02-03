@@ -10,10 +10,13 @@ urlpatterns = [
     path('transfer/<slug:slug>/', views.detalhe_transfer_view, name='detalhe_transfer'),
     
     path('blog/', views.lista_de_posts, name='lista_de_posts'),
-    
     path('blog/<slug:slug>/', views.detalhe_post, name='detalhe_do_post'),
+    
+    # --- ÁREA DE RESERVAS ---
     path('reservar/<int:praia_id>/', views.fazer_reserva_passeio, name='fazer_reserva_passeio'),
-    # ROTA NOVA (Adicione esta linha):
     path('transfer/reservar/<int:transfer_id>/', views.fazer_reserva_transfer, name='fazer_reserva_transfer'),
     path('confirmacao/', views.reserva_confirmada, name='reserva_confirmada'),
+
+    # --- NOVA ROTA: MINHA RESERVA ---
+    path('minha-reserva/', views.consultar_reserva, name='consultar_reserva'),
 ]
