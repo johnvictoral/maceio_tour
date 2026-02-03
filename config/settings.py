@@ -111,12 +111,28 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'pt-br'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Maceio'
 
 USE_I18N = True
 
+USE_L10N = True
+
 USE_TZ = True
 
+
+
+# Formatos de data para o Brasil
+DATE_INPUT_FORMATS = [
+    '%d/%m/%Y', '%d/%m/%y', # '25/10/2006', '25/10/06'
+    '%Y-%m-%d',             # '2006-10-25'
+]
+
+DATETIME_INPUT_FORMATS = [
+    '%d/%m/%Y %H:%M:%S',     # '25/10/2006 14:30:59'
+    '%d/%m/%Y %H:%M',        # '25/10/2006 14:30'
+    '%Y-%m-%d %H:%M:%S',     # '2006-10-25 14:30:59'
+    '%Y-%m-%d %H:%M',        # '2006-10-25 14:30'
+]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/

@@ -114,22 +114,30 @@ def gerenciar_banner(request):
 def detalhe_reserva(request, reserva_id):
     reserva = get_object_or_404(Reserva, id=reserva_id)
     guias_disponiveis = Guia.objects.filter(ativo=True)
+    
     if request.method == 'POST':
+        # Lógica de Atualizar Status
         if 'status' in request.POST:
             novo_status = request.POST.get('status')
             if novo_status in ['confirmado', 'concluido', 'cancelado']:
                 reserva.status = novo_status
                 reserva.save()
                 return redirect('detalhe_reserva', reserva_id=reserva.id)
+        
+        # Lógica de Atribuir Guia (O ERRO ESTAVA AQUI)
         if 'guia' in request.POST:
             guia_id = request.POST.get('guia')
             if guia_id:
                 guia_selecionado = get_object_or_404(Guia, id=guia_id)
-                reserva.guia_atribuido = guia_selecionado
+                # CORREÇÃO: Mudamos de 'guia_atribuido' para 'guia'
+                reserva.guia = guia_selecionado 
             else:
-                reserva.guia_atribuido = None
+                # CORREÇÃO: Mudamos de 'guia_atribuido' para 'guia'
+                reserva.guia = None
+            
             reserva.save()
             return redirect('detalhe_reserva', reserva_id=reserva.id)
+
     context = {'reserva': reserva, 'guias': guias_disponiveis}
     return render(request, 'dashboard/detalhe_reserva.html', context)
 

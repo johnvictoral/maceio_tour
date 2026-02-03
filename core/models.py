@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
+import random   # <--- NOVO
+import string   # <--- NOVO
 
 # =========================================
 # 1. NOVO MODELO: CLIENTE
@@ -111,6 +113,7 @@ class Reserva(models.Model):
     
     praia_destino = models.ForeignKey(Praia, on_delete=models.SET_NULL, null=True, blank=True)
     
+    guia = models.ForeignKey(Guia, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Guia Responsável")
     # Campo para salvar o nome do transfer ou local
     local_partida = models.CharField(max_length=200, blank=True, null=True)
     local_chegada = models.CharField(max_length=200, blank=True, null=True)
@@ -155,3 +158,47 @@ class Post(models.Model):
 
     def __str__(self):
         return self.titulo
+    
+def gerar_codigo_reserva():
+    # Gera 6 caracteres (Letras Maiúsculas e Números)
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+# ... (Mantenha Cliente, Praia, ImagemCarrossel, Guia, Transfer iguais) ...
+
+# =========================================
+# 3. MODELO: RESERVA (ATUALIZADO)
+# =========================================
+class Reserva(models.Model):
+    # ... seus choices ...
+    TIPO_CHOICES = (
+        ('passeio', 'Passeio'),
+        ('transfer', 'Transfer'),
+    )
+    STATUS_CHOICES = (
+        ('pendente', 'Pendente'),
+        ('confirmado', 'Confirmado'),
+        ('concluido', 'Concluído'),
+        ('cancelado', 'Cancelado'),
+    )
+
+    # --- CAMPO NOVO: CÓDIGO ---
+    # unique=True garante que nunca haverá dois iguais
+    codigo = models.CharField(max_length=10, default=gerar_codigo_reserva, unique=True, editable=False)
+    
+    # ... seus campos existentes ...
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='reservas')
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
+    guia = models.ForeignKey(Guia, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Guia Responsável")
+    praia_destino = models.ForeignKey(Praia, on_delete=models.SET_NULL, null=True, blank=True)
+    local_partida = models.CharField(max_length=200, blank=True, null=True)
+    local_chegada = models.CharField(max_length=200, blank=True, null=True)
+    data_agendamento = models.DateTimeField()
+    numero_passageiros = models.IntegerField()
+    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    informacoes_voo = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pendente')
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        # Agora mostramos o Código no painel admin também
+        return f"Reserva #{self.codigo} - {self.cliente}"

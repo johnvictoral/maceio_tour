@@ -5,14 +5,15 @@
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
   <div>
-    <h2 class="h3 fw-bold mb-0">Detalhes da Reserva #{{ reserva.numero_reserva }}</h2>
+    <h2 class="h3 fw-bold mb-0">Reserva #{{ reserva.codigo }}</h2>
     <p class="text-muted mb-0">Gerencie as informações e o status desta reserva.</p>
   </div>
   <div class="d-flex flex-wrap gap-2">
     <a href="{% url 'editar_reserva' reserva_id=reserva.id %}" class="btn btn-warning" title="Editar Reserva"><i class="bi bi-pencil-fill"></i><span class="d-none d-sm-inline ms-1">Editar</span></a>
     <a href="https://wa.me/{{ reserva.cliente.telefone|format_whatsapp_number }}?text={% filter urlencode %}Olá, {{ reserva.cliente.nome }}! Estou passando para confirmar seu {{ reserva.get_tipo_display|lower }} para {% if reserva.tipo == 'passeio' %}{{ reserva.praia_destino.nome }}{% else %}{{ reserva.local_chegada }}{% endif %} no dia {{ reserva.data_agendamento|date:"d/m/Y" }} às {{ reserva.data_agendamento|date:"H:i" }}h.{% endfilter %}" 
        target="_blank" class="btn btn-success" title="Confirmar via WhatsApp"><i class="bi bi-whatsapp"></i><span class="d-none d-sm-inline ms-1">Confirmar</span></a>
-    <a href="{% url 'gerar_recibo_pdf' reserva_id=reserva.id %}" target="_blank" class="btn btn-info text-white" title="Gerar Recibo"><i class="bi bi-printer"></i><span class="d-none d-sm-inline ms-1">Recibo</span></a>
+    <a href="{% url 'gerar_recibo_pdf' reserva_id=reserva.id %}" target="_blank" class="btn btn-info text-white" title="Gerar Voucher"><i class="bi bi-file-earmark-text"></i><span class="d-none d-sm-inline ms-1">Voucher</span></a>
+    <a href="{% url 'gerar_recibo_financeiro' reserva_id=reserva.id %}" target="_blank" class="btn btn-success text-white" title="Gerar Recibo Pagamento"><i class="bi bi-cash-stack"></i><span class="d-none d-sm-inline ms-1">Recibo</span></a>
     <a href="{% url 'painel' %}" class="btn btn-secondary" title="Voltar para a Lista"><i class="bi bi-arrow-left-circle"></i><span class="d-none d-sm-inline ms-1">Voltar</span></a>
   </div>
 </div>
@@ -93,18 +94,30 @@
           </div>
         </div>
       </div>
+      
       <div class="tab-pane fade" id="guia-tab-pane" role="tabpanel">
         <h5 class="mb-3">Atribuir Guia</h5>
-        {% if reserva.guia_atribuido %}<p>Guia atual: <strong>{{ reserva.guia_atribuido.nome }}</strong></p>{% else %}<p class="text-muted">Nenhum guia atribuído.</p>{% endif %}
+        
+        {% if reserva.guia %}
+            <p>Guia atual: <strong>{{ reserva.guia.nome }}</strong></p>
+        {% else %}
+            <p class="text-muted">Nenhum guia atribuído.</p>
+        {% endif %}
+        
         <hr>
-        <form method="POST">
+        
+        <form method="POST" action="{% url 'detalhe_reserva' reserva.id %}">
           {% csrf_token %}
           <div class="row align-items-end">
             <div class="col-md-8">
               <label for="guia" class="form-label">Selecione um guia disponível:</label>
               <select name="guia" id="guia" class="form-select">
                 <option value="">-- Nenhum --</option>
-                {% for guia in guias %}<option value="{{ guia.id }}" {% if reserva.guia_atribuido.id == guia.id %}selected{% endif %}>{{ guia.nome }}</option>{% endfor %}
+                {% for g in guias %}
+                    <option value="{{ g.id }}" {% if reserva.guia.id == g.id %}selected{% endif %}>
+                        {{ g.nome }}
+                    </option>
+                {% endfor %}
               </select>
             </div>
             <div class="col-md-4">
@@ -113,6 +126,7 @@
           </div>
         </form>
       </div>
+
     </div>
   </div>
 

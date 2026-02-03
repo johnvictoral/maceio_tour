@@ -67,21 +67,27 @@ class GuiaForm(forms.ModelForm):
 class ReservaEditForm(forms.ModelForm):
     class Meta:
         model = Reserva
-        # Definimos os campos que podem ser editados pelo administrador
-        fields = ['data_agendamento', 'numero_passageiros', 'local_partida', 'local_chegada', 'informacoes_voo']
+        # Agora o campo 'guia' existe, então podemos listar ele aqui!
+        fields = ['data_agendamento', 'numero_passageiros', 'local_partida', 'local_chegada', 'informacoes_voo', 'guia']
+        
         widgets = {
             'data_agendamento': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
             'numero_passageiros': forms.NumberInput(attrs={'class': 'form-control'}),
             'local_partida': forms.TextInput(attrs={'class': 'form-control'}),
             'local_chegada': forms.TextInput(attrs={'class': 'form-control'}),
             'informacoes_voo': forms.TextInput(attrs={'class': 'form-control'}),
+            
+            # Campo de seleção do Guia
+            'guia': forms.Select(attrs={'class': 'form-select'}),
         }
+        
         labels = {
-            'data_agendamento': 'Nova Data e Hora do Agendamento',
+            'data_agendamento': 'Nova Data e Hora',
             'numero_passageiros': 'Novo Nº de Passageiros',
             'local_partida': 'Novo Local de Partida',
             'local_chegada': 'Novo Local de Chegada',
-            'informacoes_voo': 'Nº do Voo (se aplicável)',
+            'informacoes_voo': 'Nº do Voo',
+            'guia': 'Guia Responsável',
         }
 
 class ReservaManualForm(forms.Form):

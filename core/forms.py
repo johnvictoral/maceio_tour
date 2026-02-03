@@ -35,3 +35,4 @@ class TransferForm(forms.ModelForm):
             'imagem': forms.FileInput(attrs={'class': 'form-control'}),
             'direcao': forms.Select(attrs={'class': 'form-select'}),
         }
+
