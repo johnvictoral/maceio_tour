@@ -12,6 +12,7 @@ import datetime
 from django.template.loader import render_to_string
 from django.db.models import Q
 from weasyprint import HTML
+from django.urls import reverse
 from django.contrib.auth.views import LoginView # <--- ESSA LINHA RESOLVE O SEU ERRO ATUAL
 from django.utils.text import slugify
 # Seus formulários
