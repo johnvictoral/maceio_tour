@@ -1,249 +1,242 @@
 {% load static %}
 <!DOCTYPE HTML>
-<html>
+<html lang="pt-br">
 <head>
     <meta charset="utf-8">
-    <title>Recibo JVC - #{{ reserva.id }}</title>
+    <title>Recibo #{{ reserva.codigo }}</title>
     <style type="text/css">
-        @page {
-            size: A4 portrait;
-            margin: 1cm;
-        }
-
-        body {
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 10px;
-            color: #000;
-            line-height: 1.2;
-        }
-
-        /* --- CABEÇALHO --- */
-        .header-table {
-            width: 100%;
-            border-bottom: 2px solid #117864;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
-        }
+        @page { size: A4 portrait; margin: 0; }
         
-        .company-title { 
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            font-size: 11px;
+        }
+
+        /* CABEÇALHO SÓLIDO */
+        .header-bg {
+            background-color: #117864;
+            color: #fff;
+            padding: 30px 40px;
+            height: 90px;
+        }
+        .company-title { font-size: 26px; font-weight: bold; text-transform: uppercase; margin: 0; }
+        .company-subtitle { font-size: 12px; opacity: 0.9; margin-top: 5px; }
+        
+        /* BOX DA DIREITA */
+        .voucher-box {
+            float: right;
+            text-align: right;
+        }
+        .doc-type { 
             font-size: 24px; 
             font-weight: bold; 
-            color: #117864; 
-            text-transform: uppercase; 
-            margin-bottom: 2px;
+            letter-spacing: 3px; 
+            color: #F39C12; /* Laranja da marca */
+            text-transform: uppercase;
+            margin-bottom: 5px;
         }
-        .company-subtitle { 
-            font-size: 12px; 
-            color: #333; 
-            font-weight: bold;
-        }
-        
-        .doc-title { font-size: 14px; font-weight: bold; text-align: right; }
-        .doc-number { font-size: 12px; text-align: right; color: #555; }
+        .voucher-code { font-size: 16px; color: #fff; font-weight: bold; }
 
-        /* --- SEÇÕES --- */
-        .section-title {
-            background-color: #eee;
-            border-left: 4px solid #117864; /* Verde JVC */
-            padding: 4px 8px;
+        /* CORPO */
+        .content { padding: 40px; }
+
+        /* SEÇÕES */
+        .section-header {
+            border-bottom: 2px solid #117864;
+            color: #117864;
+            font-size: 12px;
             font-weight: bold;
             text-transform: uppercase;
-            font-size: 10px;
-            margin-top: 15px;
-            margin-bottom: 4px;
-        }
-
-        .info-block {
-            border: 1px solid #ccc;
-            padding: 5px;
-            margin-bottom: 2px;
-        }
-
-        /* --- TABELAS --- */
-        table { width: 100%; border-collapse: collapse; }
-        td { vertical-align: top; padding: 2px 4px; }
-        
-        .label { font-weight: bold; font-size: 8px; color: #555; text-transform: uppercase; }
-        .value { font-size: 11px; font-weight: normal; color: #000; }
-        .check-box { font-family: monospace; font-size: 10px; line-height: 1.4; }
-
-        /* --- DESTAQUE DE VALOR --- */
-        .valor-box {
-            background-color: #f0fdf4;
-            border: 2px dashed #117864;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 5px;
-        }
-
-        /* --- TEXTO LEGAL --- */
-        .legal-text {
-            font-size: 9px;
-            text-align: justify;
             margin-top: 20px;
             margin-bottom: 10px;
-            font-style: italic;
-            color: #444;
-            background-color: #f9f9f9;
-            padding: 10px;
-            border-radius: 4px;
+            padding-bottom: 5px;
         }
 
-        /* --- RODAPÉ FIXO --- */
-        #footer {
-            position: fixed;
-            bottom: 0px;
-            left: 0px;
-            right: 0px;
-            height: 30px;
+        /* TABELAS */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        td { vertical-align: top; padding: 6px 8px; }
+        
+        tr.row-bg { background-color: #f4f4f4; }
+
+        .label { font-size: 9px; color: #666; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 2px; }
+        .value { font-size: 12px; color: #000; font-weight: normal; }
+        .value-bold { font-size: 13px; font-weight: bold; color: #000; }
+
+        /* CHECKBOXES */
+        .checkbox-area { 
+            border: 1px solid #ddd; 
+            background: #fafafa; 
+            padding: 10px; 
+            border-radius: 4px; 
+            font-size: 11px;
+        }
+        .cb-item { display: inline-block; margin-right: 15px; color: #555; }
+        .cb-checked { color: #117864; font-weight: bold; }
+
+        /* DESTAQUE DE VALOR */
+        .price-box {
+            background-color: #117864;
+            color: white;
+            padding: 10px 20px;
             text-align: center;
-            font-size: 8px;
-            color: #777;
-            border-top: 1px solid #ccc;
-            padding-top: 5px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        /* TEXTO JURÍDICO */
+        .legal-text { font-size: 10px; color: #333; text-align: justify; margin-top: 10px; line-height: 1.4; }
+        
+        /* ASSINATURA */
+        .signature-area { margin-top: 50px; text-align: center; }
+        .sig-line { border-top: 1px solid #333; width: 40%; margin: 0 auto 5px auto; }
+        
+        /* RODAPÉ */
+        .footer-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background-color: #eee; color: #555;
+            text-align: center; padding: 10px;
+            font-size: 9px; border-top: 1px solid #ccc;
         }
     </style>
 </head>
 <body>
 
-    <table class="header-table">
-        <tr>
-            <td width="60%" valign="middle" align="left">
-                <div class="company-title">Vá com John</div>
-                <div class="company-subtitle">Receptivo & Turismo em Alagoas</div>
-                <div style="font-size: 10px; margin-top: 4px; color: #555;">CNPJ: 33.780.923/0001-62</div>
-            </td>
-
-            <td width="40%" valign="middle" align="right">
-                <div class="doc-title" style="font-size: 18px; color: #333;">RECIBO DE PAGAMENTO</div>
-                <div class="doc-number">Ref. Reserva: #{{ reserva.codigo }}</div>
-                <div style="font-size: 9px;">Data de Emissão: {% now "d/m/Y" %}</div>
-            </td>
-        </tr>
-    </table>
-
-    <div class="section-title">1. DADOS DO BENEFICIÁRIO (PRESTADOR)</div>
-    <div class="info-block">
-        <table>
-            <tr>
-                <td width="60%">
-                    <div class="label">Empresa / Nome Fantasia</div>
-                    <div class="value">Vá com John Receptivo & Turismo</div>
-                </td>
-                <td width="40%">
-                    <div class="label">Responsável Legal</div>
-                    <div class="value">John Victor Cavalcante Medeiros</div>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <div class="label">CNPJ</div>
-                    <div class="value">33.780.923/0001-62</div>
-                </td>
-                <td>
-                    <div class="label">Contato</div>
-                    <div class="value">(82) 99932-5548</div>
-                </td>
-            </tr>
-        </table>
+    <div class="header-bg">
+        <div style="float: left;">
+            <div class="company-title">Vá com John</div>
+            <div class="company-subtitle">Turismo & Receptivo VIP • CNPJ: 58.788.134/0001-20</div>
+            <div style="font-size: 10px; margin-top: 5px;">www.vacomjohn.com.br • Maceió - AL</div>
+        </div>
+        
+        <div class="voucher-box">
+            <div class="doc-type">RECIBO</div>
+            <div class="voucher-code">Nº: {{ reserva.codigo }}</div>
+            <div style="font-size: 11px; margin-top: 5px; color: #ddd;">Data: {% now "d/m/Y" %}</div>
+        </div>
     </div>
 
-    <div class="section-title">2. DADOS DO PAGADOR (CLIENTE)</div>
-    <div class="info-block">
+    <div class="content">
+
+        <div class="section-header">1. Dados do Pagador (Cliente)</div>
         <table>
-            <tr>
-                <td width="60%">
-                    <div class="label">Nome do Responsável</div>
-                    <div class="value">{{ reserva.cliente.nome }} {{ reserva.cliente.sobrenome }}</div>
+            <tr class="row-bg">
+                <td width="50%">
+                    <span class="label">Nome Responsável</span>
+                    <span class="value-bold">{{ reserva.cliente.nome }} {{ reserva.cliente.sobrenome }}</span>
                 </td>
-                <td width="40%">
-                    <div class="label">WhatsApp / Contato</div>
-                    <div class="value">{{ reserva.cliente.telefone }}</div>
+                <td width="25%">
+                    <span class="label">Telefone / WhatsApp</span>
+                    <span class="value">{{ reserva.cliente.telefone }}</span>
+                </td>
+                <td width="25%">
+                    <span class="label">Email</span>
+                    <span class="value">{{ reserva.cliente.email }}</span>
                 </td>
             </tr>
-        </table>
-    </div>
-
-    <div class="section-title">3. DESCRIÇÃO DO SERVIÇO QUITADO</div>
-    <div class="info-block">
-        <table>
             <tr>
                 <td colspan="3">
-                    <div class="label">Tipo de Serviço</div>
-                    <div class="value check-box" style="margin-top: 2px;">
-                        {% if reserva.tipo == 'transfer' and 'aeroporto' in reserva.local_partida|lower %}
-                            ( X ) Transfer IN (Aeroporto &rarr; Hotel)
-                        {% elif reserva.tipo == 'transfer' and 'aeroporto' in reserva.local_chegada|lower %}
-                            ( X ) Transfer OUT (Hotel &rarr; Aeroporto)
+                    <span class="label">Endereço / Referência</span>
+                    <span class="value">
+                        {% if 'aeroporto' in reserva.local_partida|lower %}
+                            {{ reserva.local_chegada }}
                         {% else %}
-                            ( X ) Passeio Turístico / Tour Privativo
+                            {{ reserva.local_partida }}
                         {% endif %}
-                    </div>
+                    </span>
                 </td>
             </tr>
+        </table>
+
+        <div class="section-header">2. Detalhamento do Serviço Pago</div>
+        
+        <div class="checkbox-area">
+            <span class="label" style="margin-bottom: 5px;">ITEM QUITADO:</span>
+            
+            {% if reserva.tipo == 'transfer' and 'aeroporto' in reserva.local_partida|lower %}
+                <span class="cb-item cb-checked">[ X ] TRANSFER IN (Chegada)</span>
+                <span class="cb-item">[ &nbsp; ] TRANSFER OUT (Saída)</span>
+                <span class="cb-item">[ &nbsp; ] PASSEIO TURÍSTICO</span>
+            {% elif reserva.tipo == 'transfer' and 'aeroporto' in reserva.local_chegada|lower %}
+                <span class="cb-item">[ &nbsp; ] TRANSFER IN (Chegada)</span>
+                <span class="cb-item cb-checked">[ X ] TRANSFER OUT (Saída)</span>
+                <span class="cb-item">[ &nbsp; ] PASSEIO TURÍSTICO</span>
+            {% else %}
+                <span class="cb-item">[ &nbsp; ] TRANSFER IN</span>
+                <span class="cb-item">[ &nbsp; ] TRANSFER OUT</span>
+                <span class="cb-item cb-checked">[ X ] PASSEIO TURÍSTICO</span>
+            {% endif %}
+        </div>
+
+        <table style="margin-top: 10px;">
+            <tr class="row-bg">
+                <td width="33%">
+                    <span class="label">Data do Serviço</span>
+                    <span class="value-bold" style="font-size: 16px; color: #117864;">{{ reserva.data_agendamento|date:"d/m/Y" }}</span>
+                </td>
+                <td width="33%">
+                    <span class="label">Horário</span>
+                    <span class="value-bold" style="font-size: 16px;">{{ reserva.data_agendamento|date:"H:i" }}</span>
+                </td>
+                <td width="33%">
+                    <span class="label">Qtd. Pax</span>
+                    <span class="value">{{ reserva.numero_passageiros }} Pessoas</span>
+                </td>
+            </tr>
+        </table>
+
+        <div class="section-header">3. Descritivo (Itinerário)</div>
+        <table>
             <tr>
-                <td width="33%">
-                    <div class="label">Data do Serviço</div>
-                    <div class="value">{{ reserva.data_agendamento|date:"d/m/Y" }}</div>
+                <td width="50%" style="border-right: 1px solid #ddd;">
+                    <span class="label">Origem</span>
+                    <span class="value-bold">{{ reserva.local_partida }}</span>
                 </td>
-                <td width="33%">
-                    <div class="label">Origem</div>
-                    <div class="value">{{ reserva.local_partida }}</div>
-                </td>
-                <td width="33%">
-                    <div class="label">Destino</div>
-                    <div class="value">
+                <td width="50%" style="padding-left: 15px;">
+                    <span class="label">Destino</span>
+                    <span class="value-bold">
                         {% if reserva.tipo == 'passeio' %}
                             {{ reserva.praia_destino.nome }}
                         {% else %}
                             {{ reserva.local_chegada }}
                         {% endif %}
+                    </span>
+                </td>
+            </tr>
+        </table>
+
+        <div class="section-header">4. Quitação Financeira</div>
+        
+        <table style="margin-top: 10px;">
+            <tr>
+                <td width="70%">
+                    <div class="legal-text">
+                        <strong>Declaração:</strong> Recebemos de <strong>{{ reserva.cliente.nome }} {{ reserva.cliente.sobrenome }}</strong> a importância líquida e certa descrita ao lado.
+                        <br><br>
+                        Pelo que firmamos o presente, dando plena, geral e irrevogável quitação quanto ao valor recebido pelos serviços de agenciamento turístico descritos acima.
+                    </div>
+                </td>
+                <td width="30%" align="right" valign="middle">
+                    <div class="price-box">
+                        <div style="font-size: 9px; text-transform: uppercase;">Valor Pago</div>
+                        <div style="font-size: 18px; font-weight: bold;">R$ {{ reserva.valor|floatformat:2 }}</div>
                     </div>
                 </td>
             </tr>
         </table>
-    </div>
 
-    <div class="section-title">4. DADOS DO PAGAMENTO</div>
-    <div class="info-block" style="border: none;">
-        <div class="valor-box">
-            <table width="100%">
-                <tr>
-                    <td width="60%" valign="middle">
-                        <div class="label" style="font-size: 10px;">IMPORTÂNCIA RECEBIDA</div>
-                        <div style="font-size: 24px; font-weight: bold; color: #117864; margin-top: 5px;">
-                            R$ {{ reserva.valor|floatformat:2 }}
-                        </div>
-                    </td>
-                    <td width="40%" valign="middle" align="right">
-                        <div class="label">STATUS DO PAGAMENTO</div>
-                        <div style="font-size: 14px; font-weight: bold; margin-top: 5px;">
-                            {% if reserva.status == 'pendente' %}
-                                <span style="color: #F39C12;">PENDENTE</span>
-                            {% elif reserva.status == 'cancelado' %}
-                                <span style="color: red;">CANCELADO</span>
-                            {% else %}
-                                <span style="color: green;">CONFIRMADO / PAGO</span>
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-            </table>
+        <div class="signature-area">
+            <div class="sig-line"></div>
+            <div style="font-size: 11px; font-weight: bold;">Vá com John Receptivo</div>
+            <div style="font-size: 9px; color: #666;">Departamento Financeiro</div>
         </div>
+
     </div>
 
-    <div class="legal-text">
-        Declaramos para os devidos fins que recebemos do pagador acima identificado a importância supra descrita, dando plena, geral e rasa quitação referente aos serviços turísticos especificados neste documento.
-    </div>
-
-    <div style="margin-top: 40px; text-align: center;">
-        <div style="border-top: 1px solid #000; width: 40%; margin: 0 auto;"></div>
-        <div style="font-size: 9px; margin-top: 4px; font-weight: bold;">Vá com John Receptivo & Turismo</div>
-        <div style="font-size: 8px;">CNPJ: 33.780.923/0001-62</div>
-    </div>
-
-    <div id="footer">
-        Vá com John Receptivo & Turismo • Maceió - AL • Recibo gerado eletronicamente em {% now "d/m/Y H:i" %}
+    <div class="footer-bar">
+        Vá com John Turismo • www.vacomjohn.com.br • (82) 99932-5548 • Maceió/AL
     </div>
 
 </body>

@@ -1,259 +1,248 @@
 {% load static %}
 <!DOCTYPE HTML>
-<html>
+<html lang="pt-br">
 <head>
     <meta charset="utf-8">
-    <title>Contrato JVC - #{{ reserva.id }}</title>
+    <title>Voucher #{{ reserva.codigo }}</title>
     <style type="text/css">
-        @page {
-            size: A4 portrait;
-            margin: 1cm;
-        }
-
+        @page { size: A4 portrait; margin: 0; }
+        
         body {
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 10px;
-            color: #000;
-            line-height: 1.2;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            font-size: 11px;
         }
 
-        /* --- CABEÇALHO --- */
-        .header-table {
-            width: 100%;
-            border-bottom: 2px solid #117864;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
+        /* CABEÇALHO SÓLIDO */
+        .header-bg {
+            background-color: #117864;
+            color: #fff;
+            padding: 30px 40px;
+            height: 90px;
         }
+        .company-title { font-size: 26px; font-weight: bold; text-transform: uppercase; margin: 0; }
+        .company-subtitle { font-size: 12px; opacity: 0.9; margin-top: 5px; }
         
-        /* Estilo do Título da Empresa (Agora na Esquerda) */
-        .company-title { 
-            font-size: 24px; /* Aumentei para destacar bem */
+        /* BOX DA DIREITA (ONDE FICA O VOUCHER) */
+        .voucher-box {
+            float: right;
+            text-align: right;
+        }
+        .doc-type { 
+            font-size: 24px; 
             font-weight: bold; 
-            color: #117864; 
-            text-transform: uppercase; 
-            margin-bottom: 2px;
+            letter-spacing: 3px; 
+            color: #F39C12; /* Laranja da marca para destaque */
+            text-transform: uppercase;
+            margin-bottom: 5px;
         }
-        .company-subtitle { 
-            font-size: 12px; 
-            color: #333; 
-            font-weight: bold;
-        }
-        
-        .doc-title { font-size: 14px; font-weight: bold; text-align: right; }
-        .doc-number { font-size: 12px; text-align: right; color: #555; }
+        .voucher-code { font-size: 16px; color: #fff; font-weight: bold; }
 
-        /* --- SEÇÕES --- */
-        .section-title {
-            background-color: #eee;
-            border-left: 4px solid #F39C12;
-            padding: 4px 8px;
+        /* CORPO */
+        .content { padding: 40px; }
+
+        /* SEÇÕES */
+        .section-header {
+            border-bottom: 2px solid #117864;
+            color: #117864;
+            font-size: 12px;
             font-weight: bold;
             text-transform: uppercase;
-            font-size: 10px;
-            margin-top: 10px;
-            margin-bottom: 4px;
-        }
-
-        .info-block {
-            border: 1px solid #ccc;
-            padding: 5px;
-            margin-bottom: 2px;
-        }
-
-        /* --- TABELAS DE DADOS --- */
-        table { width: 100%; border-collapse: collapse; }
-        td { vertical-align: top; padding: 2px 4px; }
-        
-        .label { font-weight: bold; font-size: 8px; color: #555; text-transform: uppercase; }
-        .value { font-size: 11px; font-weight: normal; color: #000; }
-        .check-box { font-family: monospace; font-size: 10px; line-height: 1.4; }
-
-        /* --- TEXTO LEGAL --- */
-        .legal-text {
-            font-size: 8px;
-            text-align: center;
+            margin-top: 20px;
             margin-bottom: 10px;
-            font-style: italic;
-            color: #444;
+            padding-bottom: 5px;
         }
 
-        /* --- RODAPÉ FIXO --- */
-        #footer {
-            position: fixed;
-            bottom: 0px;
-            left: 0px;
-            right: 0px;
-            height: 30px;
+        /* TABELAS */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        td { vertical-align: top; padding: 6px 8px; }
+        
+        tr.row-bg { background-color: #f4f4f4; }
+
+        .label { font-size: 9px; color: #666; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 2px; }
+        .value { font-size: 12px; color: #000; font-weight: normal; }
+        .value-bold { font-size: 13px; font-weight: bold; color: #000; }
+
+        /* CHECKBOXES */
+        .checkbox-area { 
+            border: 1px solid #ddd; 
+            background: #fafafa; 
+            padding: 10px; 
+            border-radius: 4px; 
+            font-size: 11px;
+        }
+        .cb-item { display: inline-block; margin-right: 15px; color: #555; }
+        .cb-checked { color: #117864; font-weight: bold; }
+
+        /* DESTAQUE DE VALOR */
+        .price-box {
+            background-color: #117864;
+            color: white;
+            padding: 10px 20px;
             text-align: center;
-            font-size: 8px;
-            color: #777;
-            border-top: 1px solid #ccc;
-            padding-top: 5px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        /* RODAPÉ E ASSINATURA */
+        .legal-text { font-size: 9px; color: #777; text-align: justify; margin-top: 10px; line-height: 1.3; }
+        
+        .signature-area { margin-top: 50px; text-align: center; }
+        .sig-line { border-top: 1px solid #333; width: 40%; margin: 0 auto 5px auto; }
+        
+        .footer-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background-color: #eee; color: #555;
+            text-align: center; padding: 10px;
+            font-size: 9px; border-top: 1px solid #ccc;
         }
     </style>
 </head>
 <body>
 
-    <table class="header-table">
-        <tr>
-            <td width="60%" valign="middle" align="left">
-                <div class="company-title">Vá com John</div>
-                <div class="company-subtitle">Receptivo & Turismo em Alagoas</div>
-                <div style="font-size: 10px; margin-top: 4px; color: #555;">CNPJ: 33.780.923/0001-62</div>
-            </td>
-
-            <td width="40%" valign="middle" align="right">
-                <div class="doc-title">CONTRATO / VOUCHER</div>
-                <div class="doc-number">Localizador: #{{ reserva.codigo }}</div>
-                <div style="font-size: 9px;">Emissão: {% now "d/m/Y" %}</div>
-            </td>
-        </tr>
-    </table>
-
-    <div class="legal-text">
-        Este documento confirma a contratação de serviço de receptivo/guiamento turístico prestado por profissional credenciado.
+    <div class="header-bg">
+        <div style="float: left;">
+            <div class="company-title">Vá com John</div>
+            <div class="company-subtitle">Turismo & Receptivo VIP • CNPJ: 58.788.134/0001-20</div>
+            <div style="font-size: 10px; margin-top: 5px;">Cadastur: 02.109531.21-6</div>
+            <div style="font-size: 10px; margin-top: 2px; font-weight: bold;">www.vacomjohn.com.br</div>
+        </div>
+        
+        <div class="voucher-box">
+            <div class="doc-type">VOUCHER</div>
+            <div class="voucher-code">Reserva: #{{ reserva.codigo }}</div>
+            <div style="font-size: 11px; margin-top: 5px; color: #ddd;">Emissão: {% now "d/m/Y" %}</div>
+        </div>
     </div>
 
-    <div class="section-title">1. DADOS DO PRESTADOR DE SERVIÇO (Profissional Credenciado)</div>
-    <div class="info-block">
-        <table>
-            <tr>
-                <td width="60%">
-                    <div class="label">Empresa / Nome Fantasia</div>
-                    <div class="value">Vá com John Receptivo & Turismo</div>
-                </td>
-                <td width="40%">
-                    <div class="label">Responsável Legal / Guia</div>
-                    <div class="value">John Victor Cavalcante Medeiros</div>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <div class="label">CADASTUR</div>
-                    <div class="value">02.109531.21-6</div> </td>
-                <td>
-                    <div class="label">Contato / Plantão</div>
-                    <div class="value">(82) 99932-5548</div> </td>
-            </tr>
-        </table>
-    </div>
+    <div class="content">
 
-    <div class="section-title">2. DADOS DO CLIENTE CONTRATANTE</div>
-    <div class="info-block">
+        <div class="section-header">1. Dados do Contratante (Passageiro)</div>
         <table>
-            <tr>
-                <td width="60%">
-                    <div class="label">Nome do Responsável</div>
-                    <div class="value">{{ reserva.cliente.nome }} {{ reserva.cliente.sobrenome }}</div>
+            <tr class="row-bg">
+                <td width="50%">
+                    <span class="label">Nome Responsável</span>
+                    <span class="value-bold">{{ reserva.cliente.nome }} {{ reserva.cliente.sobrenome }}</span>
                 </td>
-                <td width="40%">
-                    <div class="label">WhatsApp / Contato</div>
-                    <div class="value">{{ reserva.cliente.telefone }}</div>
+                <td width="25%">
+                    <span class="label">Telefone / WhatsApp</span>
+                    <span class="value">{{ reserva.cliente.telefone }}</span>
+                </td>
+                <td width="25%">
+                    <span class="label">Qtd. Passageiros</span>
+                    <span class="value">{{ reserva.numero_passageiros }} Pessoas</span>
                 </td>
             </tr>
             <tr>
-                <td colspan="2">
-                    <div class="label">Local de Hospedagem / Referência</div>
-                    <div class="value">
+                <td colspan="3">
+                    <span class="label">Local de Hospedagem / Referência</span>
+                    <span class="value">
                         {% if 'aeroporto' in reserva.local_partida|lower %}
                             {{ reserva.local_chegada }}
                         {% else %}
                             {{ reserva.local_partida }}
                         {% endif %}
-                    </div>
+                    </span>
                 </td>
             </tr>
         </table>
-    </div>
 
-    <div class="section-title">3. DETALHES DO SERVIÇO CONTRATADO</div>
-    <div class="info-block">
-        <table>
-            <tr>
-                <td colspan="3">
-                    <div class="label">Tipo de Serviço</div>
-                    <div class="value check-box" style="margin-top: 2px;">
-                        {% if reserva.tipo == 'transfer' and 'aeroporto' in reserva.local_partida|lower %}
-                            ( X ) Transfer IN (Aeroporto &rarr; Hotel) &nbsp;&nbsp; ( &nbsp; ) Transfer OUT &nbsp;&nbsp; ( &nbsp; ) Passeio
-                        {% elif reserva.tipo == 'transfer' and 'aeroporto' in reserva.local_chegada|lower %}
-                            ( &nbsp; ) Transfer IN &nbsp;&nbsp; ( X ) Transfer OUT (Hotel &rarr; Aeroporto) &nbsp;&nbsp; ( &nbsp; ) Passeio
-                        {% else %}
-                            ( &nbsp; ) Transfer IN &nbsp;&nbsp; ( &nbsp; ) Transfer OUT &nbsp;&nbsp; ( X ) Passeio Turístico / Tour
-                        {% endif %}
-                    </div>
-                </td>
-            </tr>
-            <tr>
+        <div class="section-header">2. Configuração do Serviço</div>
+        
+        <div class="checkbox-area">
+            <span class="label" style="margin-bottom: 5px;">MODALIDADE DO SERVIÇO:</span>
+            
+            {% if reserva.tipo == 'transfer' and 'aeroporto' in reserva.local_partida|lower %}
+                <span class="cb-item cb-checked">[ X ] TRANSFER IN (Chegada)</span>
+                <span class="cb-item">[ &nbsp; ] TRANSFER OUT (Saída)</span>
+                <span class="cb-item">[ &nbsp; ] PASSEIO TURÍSTICO</span>
+            {% elif reserva.tipo == 'transfer' and 'aeroporto' in reserva.local_chegada|lower %}
+                <span class="cb-item">[ &nbsp; ] TRANSFER IN (Chegada)</span>
+                <span class="cb-item cb-checked">[ X ] TRANSFER OUT (Saída)</span>
+                <span class="cb-item">[ &nbsp; ] PASSEIO TURÍSTICO</span>
+            {% else %}
+                <span class="cb-item">[ &nbsp; ] TRANSFER IN</span>
+                <span class="cb-item">[ &nbsp; ] TRANSFER OUT</span>
+                <span class="cb-item cb-checked">[ X ] PASSEIO TURÍSTICO</span>
+            {% endif %}
+        </div>
+
+        <table style="margin-top: 10px;">
+            <tr class="row-bg">
                 <td width="33%">
-                    <div class="label">Data do Serviço</div>
-                    <div class="value" style="font-weight: bold;">{{ reserva.data_agendamento|date:"d/m/Y" }}</div>
+                    <span class="label">Data Agendada</span>
+                    <span class="value-bold" style="font-size: 16px; color: #117864;">{{ reserva.data_agendamento|date:"d/m/Y" }}</span>
                 </td>
                 <td width="33%">
-                    <div class="label">Horário</div>
-                    <div class="value" style="font-weight: bold;">{{ reserva.data_agendamento|date:"H:i" }}</div>
+                    <span class="label">Horário</span>
+                    <span class="value-bold" style="font-size: 16px;">{{ reserva.data_agendamento|date:"H:i" }}</span>
                 </td>
                 <td width="33%">
-                    <div class="label">Nº Voo / Obs</div>
-                    <div class="value">{{ reserva.informacoes_voo|default:"N/A" }}</div>
+                    <span class="label">Nº Voo / Observação</span>
+                    <span class="value">{{ reserva.informacoes_voo|default:"---" }}</span>
                 </td>
             </tr>
         </table>
-    </div>
 
-    <div class="section-title">4. ITINERÁRIO / ROTEIRO</div>
-    <div class="info-block">
+        <div class="section-header">3. Itinerário / Roteiro</div>
         <table>
             <tr>
-                <td width="50%">
-                    <div class="label">Origem (Local de Pegada)</div>
-                    <div class="value">{{ reserva.local_partida }}</div>
+                <td width="50%" style="border-right: 1px solid #ddd;">
+                    <span class="label">Origem (Embarque)</span>
+                    <span class="value-bold">{{ reserva.local_partida }}</span>
                 </td>
-                <td width="50%">
-                    <div class="label">Destino (Local de Descida)</div>
-                    <div class="value">
+                <td width="50%" style="padding-left: 15px;">
+                    <span class="label">Destino (Desembarque/Passeio)</span>
+                    <span class="value-bold">
                         {% if reserva.tipo == 'passeio' %}
                             {{ reserva.praia_destino.nome }}
                         {% else %}
                             {{ reserva.local_chegada }}
                         {% endif %}
-                    </div>
+                    </span>
                 </td>
             </tr>
+        </table>
+
+        {% if reserva.guia %}
+        <div style="background: #fafafa; padding: 10px; border-left: 4px solid #F39C12; margin-top: 10px;">
+            <span class="label">Motorista / Guia Designado</span>
+            <span class="value-bold">{{ reserva.guia.nome }}</span>
+            <span class="value"> • {{ reserva.guia.modelo_carro }} ({{ reserva.guia.placa_carro }})</span>
+        </div>
+        {% endif %}
+
+
+        <div class="section-header">4. Validação</div>
+        
+        <table style="margin-top: 10px;">
             <tr>
-                <td colspan="2">
-                    <div class="label">Veículo e Serviço</div>
-                    <div class="value">
-                        Veículo Executivo (Sedan/SUV). Transporte privativo com Guia Credenciado.
+                <td width="70%">
+                    <div class="legal-text">
+                        <strong>Termos:</strong> O passageiro declara estar ciente dos horários e condições do serviço. Cancelamentos devem ser informados com antecedência mínima de 24h. Este documento serve como comprovante de reserva e contrato de prestação de serviço.
+                    </div>
+                </td>
+                <td width="30%" align="right" valign="middle">
+                    <div class="price-box">
+                        <div style="font-size: 9px; text-transform: uppercase;">Valor Total</div>
+                        <div style="font-size: 18px; font-weight: bold;">R$ {{ reserva.valor|floatformat:2 }}</div>
                     </div>
                 </td>
             </tr>
         </table>
-    </div>
-    
-    <div style="margin-top: 8px; border: 1px dashed #999; padding: 5px; border-radius: 4px; background-color: #f9f9f9;">
-        <table width="100%">
-            <tr>
-                <td width="70%" valign="middle">
-                    <div class="label">Observações Gerais</div>
-                    <div style="font-size: 8px; color: #555;">
-                        O passageiro declara estar ciente dos horários e condições do serviço contratado.
-                    </div>
-                </td>
-                <td width="30%" align="right">
-                    <div class="label">VALOR TOTAL ACORDADO</div>
-                    <div style="font-size: 14px; font-weight: bold; color: #117864;">R$ {{ reserva.valor|floatformat:2 }}</div>
-                </td>
-            </tr>
-        </table>
+
+        <div class="signature-area">
+            <div class="sig-line"></div>
+            <div style="font-size: 11px; font-weight: bold;">Vá com John Receptivo</div>
+            <div style="font-size: 9px; color: #666;">Assinatura do Responsável</div>
+        </div>
+
     </div>
 
-    <div style="margin-top: 30px; text-align: center;">
-        <div style="border-top: 1px solid #000; width: 50%; margin: 0 auto;"></div>
-        <div style="font-size: 9px; margin-top: 4px;">Assinatura / Visto do Prestador</div>
-    </div>
-
-    <div id="footer">
-        Vá com John Receptivo & Turismo • Maceió - AL • Documento válido para fiscalização.
+    <div class="footer-bar">
+        Vá com John Turismo • www.vacomjohn.com.br • (82) 99932-5548 • Maceió/AL • Consulte sua reserva online: vacomjohn.pythonanywhere.com/minha-reserva
     </div>
 
 </body>
