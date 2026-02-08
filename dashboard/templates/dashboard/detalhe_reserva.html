@@ -11,22 +11,22 @@
   <div class="d-flex flex-wrap gap-2">
     <a href="{% url 'editar_reserva' reserva_id=reserva.id %}" class="btn btn-warning" title="Editar Reserva"><i class="bi bi-pencil-fill"></i><span class="d-none d-sm-inline ms-1">Editar</span></a>
     
-    <a href="https://wa.me/{{ reserva.cliente.telefone|format_whatsapp_number }}?text={% filter urlencode %}Ola, *{{ reserva.cliente.nome }}*!
+    <a href="https://wa.me/{{ reserva.cliente.telefone|format_whatsapp_number }}?text={% filter urlencode %}Olá, *{{ reserva.cliente.nome }}*! Tudo bem?
 
-Aqui e da *Va com John*. Segue a confirmacao da sua reserva:
+Aqui é da *Vá com John*. Segue a confirmação da sua reserva:
 
-*CONFIRMACAO DE RESERVA*
+*CONFIRMAÇÃO DE RESERVA*
 
 *Localizador:* #{{ reserva.codigo }}
 *Data:* {{ reserva.data_agendamento|date:"d/m/Y" }}
-*Horario:* {{ reserva.data_agendamento|date:"H:i" }}
+*Horário:* {{ reserva.data_agendamento|date:"H:i" }}
 
 {% if reserva.tipo == 'passeio' %}
 *Passeio:* {{ reserva.praia_destino.nome }}
-*Local Saida:* {{ reserva.local_partida }}
+*Local Saída:* {{ reserva.local_partida }}
 {% else %}
 *Transfer:* {{ reserva.local_partida }} para {{ reserva.local_chegada }}
-*Voo:* {{ reserva.informacoes_voo|default:"Nao informado" }}
+*Voo:* {{ reserva.informacoes_voo|default:"Não informado" }}
 {% endif %}
 
 *Qtd Pessoas:* {{ reserva.numero_passageiros }}
@@ -36,7 +36,7 @@ Aqui e da *Va com John*. Segue a confirmacao da sua reserva:
 *Guia:* {{ reserva.guia.nome }} - {{ reserva.guia.modelo_carro }}
 {% endif %}
 
-Qualquer duvida, estou a disposicao!
+Qualquer dúvida, estou à disposição!
 Acesse: www.vacomjohn.com.br{% endfilter %}" 
        target="_blank" class="btn btn-success" title="Confirmar via WhatsApp">
        <i class="bi bi-whatsapp"></i><span class="d-none d-sm-inline ms-1">Confirmar (WhatsApp)</span>

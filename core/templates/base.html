@@ -29,7 +29,7 @@
       body {
         font-family: 'Open Sans', sans-serif;
         color: var(--text-dark);
-        padding-top: 76px; /* Altura da navbar */
+        padding-top: 76px;
         display: flex;
         flex-direction: column;
         min-height: 100vh;
@@ -39,10 +39,10 @@
         font-family: 'Montserrat', sans-serif;
       }
 
-      /* --- Navbar Customizada --- */
+      /* Navbar */
       .navbar {
         background-color: rgba(255, 255, 255, 0.95) !important;
-        backdrop-filter: blur(10px); /* Efeito de vidro fosco */
+        backdrop-filter: blur(10px);
         transition: all 0.3s ease-in-out;
       }
       
@@ -54,7 +54,6 @@
         transition: color 0.3s;
       }
 
-      /* Efeito sublinhado animado no menu */
       .nav-link::after {
         content: '';
         position: absolute;
@@ -75,9 +74,9 @@
         color: var(--brand-teal) !important;
       }
 
-      /* --- Botões Personalizados --- */
+      /* Botões */
       .btn {
-        border-radius: 50px; /* Botões arredondados modernos */
+        border-radius: 50px;
         padding: 0.6rem 1.5rem;
         font-weight: 600;
         transition: all 0.3s ease;
@@ -104,7 +103,7 @@
         transform: translateY(-2px);
       }
 
-      /* --- Footer Moderno --- */
+      /* Footer */
       footer {
         background: linear-gradient(135deg, var(--brand-teal-dark) 0%, var(--brand-teal) 100%);
         margin-top: auto;
@@ -119,7 +118,6 @@
         color: var(--brand-orange) !important;
       }
 
-      /* Seleção de texto na cor da marca */
       ::selection {
         background-color: var(--brand-teal);
         color: white;
@@ -180,16 +178,21 @@
     <footer class="text-white pt-5 pb-3">
       <div class="container">
         <div class="row g-4">
-          <div class="col-lg-4 col-md-6">
+          
+          <div class="col-lg-3 col-md-6">
             <h5 class="text-uppercase fw-bold text-brand-orange mb-3">Vá com John</h5>
             <p class="small text-white-50">
                 Especialistas em proporcionar experiências inesquecíveis no litoral alagoano. 
-                Segurança, conforto e pontualidade são nossa marca registrada.
+                Segurança, conforto e pontualidade.
             </p>
             <div class="mt-4">
-                <a href="#" class="text-white me-3"><i class="bi bi-instagram fs-4"></i></a>
+                <a href="https://www.instagram.com/vacomjohn.turismo/" target="_blank" class="text-white me-3"><i class="bi bi-instagram fs-4"></i></a>
+                
                 <a href="#" class="text-white me-3"><i class="bi bi-facebook fs-4"></i></a>
-                <a href="#" class="text-white"><i class="bi bi-whatsapp fs-4"></i></a>
+                
+                <a href="https://wa.me/5582999325548?text=Olá,%20vim%20pelo%20site!%20Gostaria%20de%20informações." target="_blank" class="text-white">
+                    <i class="bi bi-whatsapp fs-4"></i>
+                </a>
             </div>
           </div>
 
@@ -214,14 +217,30 @@
             </ul>
           </div>
 
-          <div class="col-lg-4 col-md-6">
+          <div class="col-lg-3 col-md-6">
             <h5 class="fw-bold mb-3">Atendimento</h5>
             <ul class="list-unstyled text-white-50">
                 <li class="mb-3 d-flex"><i class="bi bi-geo-alt-fill text-brand-orange me-2"></i> Maceió - Alagoas, Brasil</li>
-                <li class="mb-3 d-flex"><i class="bi bi-envelope-fill text-brand-orange me-2"></i> johnvictor.al@gmail.com</li>
-                <li class="mb-3 d-flex"><i class="bi bi-telephone-fill text-brand-orange me-2"></i> (82) 99932-5548</li>
+                <li class="mb-3 d-flex"><i class="bi bi-envelope-fill text-brand-orange me-2"></i> reservas@vacomjohn.com.br</li>
+                <li class="mb-3 d-flex">
+                    <a href="tel:+5582999325548" class="text-white-50 text-decoration-none d-flex">
+                        <i class="bi bi-telephone-fill text-brand-orange me-2"></i> (82) 99932-5548
+                    </a>
+                </li>
             </ul>
           </div>
+
+          <div class="col-lg-2 col-md-6">
+            <h5 class="fw-bold mb-3">Certificado</h5>
+            <div class="d-flex flex-column align-items-start">
+                <img src="{% static 'images/logocadastur.png' %}" alt="Cadastur" class="img-fluid mb-3" style="max-width: 140px;">
+                <div>
+                    <small class="d-block text-white-50" style="font-size: 10px;">REGISTRO:</small>
+                    <span class="text-white fw-bold font-monospace" style="font-size: 12px;">33.780.923/0001-62</span>
+                </div>
+            </div>
+          </div>
+
         </div>
 
         <hr class="border-secondary my-4">
