@@ -160,3 +160,12 @@ STATICFILES_DIRS = [
 
 # MERCADO PAGO
 MERCADO_PAGO_ACCESS_TOKEN = 'APP_USR-641550262322150-093021-7fb6107eb6a4884acf6857b5d5dbf0cc-27923389'
+
+# --- CONFIGURAÇÃO DE E-MAIL (SMTP HOSTINGER/TITAN) ---
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.titan.email'  # Servidor da Hostinger (Titan)
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True             # Segurança ativada
+EMAIL_HOST_USER = 'reservas@vacomjohn.com.br'
+EMAIL_HOST_PASSWORD = '190382Jvc@'  # <--- Coloque sua senha real aqui entre as aspas
+DEFAULT_FROM_EMAIL = 'Vá com John <contato@vacomjohn.com.br>'
