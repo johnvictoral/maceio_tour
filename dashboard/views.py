@@ -47,21 +47,39 @@ def painel(request):
     mes_atual = hoje.month
     ano_atual = hoje.year
 
-    # 2. Query Base (mantém seus filtros)
+    # 2. Captura os filtros da URL
     status_filtro = request.GET.get('status')
     data_filtro = request.GET.get('data')
     busca = request.GET.get('busca')
 
-    reservas = Reserva.objects.all().order_by('-data_agendamento') # Mais recentes primeiro
+    # --- AQUI ESTÁ A MUDANÇA MÁGICA ---
+    
+    # Se o usuário NÃO estiver buscando nada específico (visão padrão do dia a dia)
+    if not busca and not data_filtro:
+        # Pega todas as reservas DAQUI PARA FRENTE (maior ou igual a hoje)
+        # E ordena de forma CRESCENTE (a mais próxima aparece primeiro)
+        reservas = Reserva.objects.filter(data_agendamento__gte=hoje.date()).order_by('data_agendamento')
+        
+        # Filtra apenas as ativas por padrão (para não poluir com cancelados antigos)
+        if not status_filtro:
+            reservas = reservas.filter(status__in=['pendente', 'confirmado'])
+            
+    else:
+        # Se o usuário estiver BUSCANDO (pelo nome ou data específica)
+        # Mostra tudo (passado e futuro) ordenado do mais recente para o mais antigo
+        reservas = Reserva.objects.all().order_by('-data_agendamento')
 
+    # --- FIM DA MUDANÇA PRINCIPAL ---
+
+    # Aplica o filtro de status se o usuário clicou no dropdown
     if status_filtro:
         reservas = reservas.filter(status=status_filtro)
-    elif not data_filtro and not busca:
-        reservas = reservas.filter(status__in=['pendente', 'confirmado'])
 
+    # Aplica filtro de data específica se selecionado
     if data_filtro:
         reservas = reservas.filter(data_agendamento__date=data_filtro)
     
+    # Aplica a busca por texto (Nome, Email, ID)
     if busca:
         reservas = reservas.filter(
             Q(cliente__nome__icontains=busca) | 
@@ -72,25 +90,24 @@ def painel(request):
 
     # --- 3. CÁLCULOS FINANCEIROS (KPIs) ---
     
-    # Faturamento deste Mês (Soma CONFIRMADO e CONCLUIDO)
+    # Faturamento deste Mês
     faturamento_mes = Reserva.objects.filter(
         data_agendamento__month=mes_atual,
         data_agendamento__year=ano_atual,
         status__in=['confirmado', 'concluido']
-    ).aggregate(Sum('valor'))['valor__sum'] or 0  # O 'or 0' serve para não quebrar se for None
+    ).aggregate(Sum('valor'))['valor__sum'] or 0
 
-    # Reservas de Hoje (Qualquer status, para operação)
+    # Reservas de Hoje
     reservas_hoje = Reserva.objects.filter(data_agendamento__date=hoje.date()).count()
     
-    # Pendências (Para você correr atrás)
+    # Pendências Gerais
     reservas_pendentes = Reserva.objects.filter(status='pendente').count()
 
     # --- 4. DADOS PARA O GRÁFICO (Últimos 6 meses) ---
-    # Isso cria uma lista com o faturamento mês a mês
     dados_grafico = []
     labels_grafico = []
     
-    for i in range(5, -1, -1): # Loop dos últimos 6 meses
+    for i in range(5, -1, -1):
         data_ref = hoje - datetime.timedelta(days=i*30)
         fat_mensal = Reserva.objects.filter(
             data_agendamento__month=data_ref.month,
@@ -98,23 +115,18 @@ def painel(request):
             status__in=['confirmado', 'concluido']
         ).aggregate(Sum('valor'))['valor__sum'] or 0
         
-        # Cria os arrays para o Chart.js
-        dados_grafico.append(float(fat_mensal)) # O gráfico precisa de float, não decimal
-        labels_grafico.append(data_ref.strftime("%B/%Y")) # Ex: Fevereiro/2026
+        dados_grafico.append(float(fat_mensal))
+        labels_grafico.append(data_ref.strftime("%B/%Y"))
 
     context = {
         'reservas': reservas,
         'status_filtro': status_filtro,
         'data_filtro': data_filtro,
         'busca': busca,
-        
-        # Passando os valores calculados
         'reservas_hoje': reservas_hoje,
         'reservas_pendentes': reservas_pendentes,
         'faturamento_mes': faturamento_mes,
-        'total_clientes': Cliente.objects.count(),
-        
-        # Passando dados para o gráfico
+        'total_clientes': Cliente.objects.count(), # Se der erro aqui, verifique o import de Cliente
         'labels_grafico': labels_grafico,
         'dados_grafico': dados_grafico,
     }
