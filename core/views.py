@@ -114,50 +114,34 @@ def lista_de_posts(request):
     posts = Post.objects.filter(status='publicado').order_by('-data_publicacao')
     return render(request, 'core/lista_posts.html', {'posts': posts})
 
-# --- FUNÇÃO DE ENVIAR E-MAIL (Auxiliar) ---
-# --- FUNÇÃO DE ENVIAR E-MAIL (COM DIAGNÓSTICO DE ERRO) ---
+# --- FUNÇÃO DE ENVIAR E-MAIL (CORRIGIDA E FINAL) ---
 def enviar_email_reserva(reserva, servico_nome):
     print(f"--- TENTANDO ENVIAR E-MAIL PARA {reserva.cliente.email} ---")
     
     try:
         assunto = f'Confirmação de Reserva #{reserva.codigo} - Vá com John'
         
-        # Tenta achar o template HTML bonito
-        try:
-            html_content = render_to_string('core/emails/nova_reserva.html', {
-                'nome_cliente': reserva.cliente.nome,
-                'codigo': reserva.codigo,
-                'data_viagem': reserva.data_viagem,
-                'servico': servico_nome,
-                'valor': reserva.valor
-            })
-            text_content = strip_tags(html_content) # Cria versão texto baseada no HTML
-            
-        except Exception as e_template:
-            # --- AQUI ESTÁ O DETETIVE ---
-            # Se der erro no HTML, ele vai mandar o erro escrito no e-mail para você ler
-            print(f"ERRO DE TEMPLATE: {e_template}")
-            erro_tecnico = str(e_template)
-            
-            html_content = f"""
-            <div style='background-color:#ffe6e6; padding:20px; border:1px solid red;'>
-                <h1 style='color:red;'>ERRO AO GERAR E-MAIL BONITO</h1>
-                <p>O sistema tentou usar o arquivo 'nova_reserva.html' mas falhou.</p>
-                <p><strong>O erro exato foi:</strong></p>
-                <pre style='background:#fff; padding:10px;'>{erro_tecnico}</pre>
-                <hr>
-                <p>Dados da reserva:</p>
-                <ul>
-                    <li>Cliente: {reserva.cliente.nome}</li>
-                    <li>Código: {reserva.codigo}</li>
-                    <li>Serviço: {servico_nome}</li>
-                </ul>
-            </div>
-            """
-            text_content = f"ERRO NO TEMPLATE: {erro_tecnico}"
-            # ---------------------------
+        # Prepara os dados para o e-mail
+        # AQUI ESTAVA O ERRO: O campo certo é data_agendamento!
+        contexto = {
+            'nome_cliente': reserva.cliente.nome,
+            'codigo': reserva.codigo,
+            'data_viagem': reserva.data_agendamento, # <--- CORRIGIDO AQUI (Era data_viagem)
+            'servico': servico_nome,
+            'valor': reserva.valor
+        }
 
-        # Envia o e-mail (seja o bonito ou o de erro)
+        # Tenta criar o HTML bonito
+        try:
+            html_content = render_to_string('core/emails/nova_reserva.html', contexto)
+            text_content = strip_tags(html_content) # Cria versão texto
+        except Exception as e_template:
+            # Se der erro no HTML (agora não deve dar mais), manda texto simples
+            print(f"ERRO DE TEMPLATE (Mas vamos enviar texto): {e_template}")
+            html_content = f"<p>Olá {reserva.cliente.nome}, sua reserva <b>#{reserva.codigo}</b> foi recebida!</p>"
+            text_content = f"Olá {reserva.cliente.nome}, sua reserva #{reserva.codigo} foi recebida!"
+
+        # Envia de verdade
         send_mail(
             assunto,
             text_content,
@@ -170,7 +154,7 @@ def enviar_email_reserva(reserva, servico_nome):
         return True
 
     except Exception as e:
-        print(f"❌ ERRO FATAL AO ENVIAR E-MAIL (CONEXÃO/SENHA): {e}")
+        print(f"❌ ERRO FATAL AO ENVIAR E-MAIL: {e}")
         return False
 
 def fazer_reserva_passeio(request, praia_id):
