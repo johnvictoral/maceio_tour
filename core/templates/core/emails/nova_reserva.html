@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+        .header { background-color: #117864; color: white; padding: 20px; text-align: center; }
+        .content { padding: 30px; background-color: #fff; }
+        .footer { background-color: #f9f9f9; padding: 15px; text-align: center; font-size: 12px; color: #666; }
+        .btn { display: inline-block; padding: 10px 20px; background-color: #F39C12; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 20px; }
+        .info-box { background-color: #f0f8ff; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #117864; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Recebemos seu Pedido! 🌴</h1>
+        </div>
+        <div class="content">
+            <p>Olá, <strong>{{ nome_cliente }}</strong>!</p>
+            <p>Obrigado por escolher a <strong>Vá com John</strong>. Recebemos sua solicitação de reserva e já estamos verificando a disponibilidade.</p>
+            
+            <div class="info-box">
+                <p><strong>Código do Pedido:</strong> #{{ codigo }}</p>
+                <p><strong>Data da Viagem:</strong> {{ data_viagem }}</p>
+                <p><strong>Serviço:</strong> {{ servico }}</p>
+                <p><strong>Status Atual:</strong> <span style="color: #e67e22;">Pendente (Aguardando Confirmação)</span></p>
+            </div>
+
+            <p>Nossa equipe entrará em contato em breve (via WhatsApp ou E-mail) para confirmar os detalhes e o pagamento.</p>
+
+            <a href="https://vacomjohn.com.br/consultar-reserva/" class="btn">Acompanhar Minha Reserva</a>
+        </div>
+        <div class="footer">
+            <p><strong>Vá com John Turismo e Receptivo</strong><br>
+            Maceió - Alagoas | (82) 99932-5548<br>
+            <a href="https://vacomjohn.com.br">www.vacomjohn.com.br</a></p>
+        </div>
+    </div>
+</body>
+</html>
