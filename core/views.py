@@ -116,32 +116,42 @@ def lista_de_posts(request):
 
 # --- FUNÇÃO DE ENVIAR E-MAIL (Auxiliar) ---
 def enviar_email_reserva(reserva, servico_nome):
+    print(f"--- TENTANDO ENVIAR E-MAIL PARA {reserva.cliente.email} ---")
     try:
-        assunto = f'Recebemos seu pedido #{reserva.codigo} - Vá com John'
-        html_content = render_to_string('core/emails/nova_reserva.html', {
-            'nome_cliente': reserva.cliente.nome,
-            'codigo': reserva.codigo,
-            'data_viagem': reserva.data_viagem,
-            'servico': servico_nome
-        })
-        text_content = strip_tags(html_content) # Versão em texto puro para evitar spam
+        assunto = f'Confirmação de Reserva #{reserva.codigo} - Vá com John'
         
+        # Tenta achar o template, se não achar, envia texto simples para não travar
+        try:
+            html_content = render_to_string('core/emails/nova_reserva.html', {
+                'nome_cliente': reserva.cliente.nome,
+                'codigo': reserva.codigo,
+                'data_viagem': reserva.data_viagem,
+                'servico': servico_nome,
+                'valor': reserva.valor
+            })
+            text_content = strip_tags(html_content)
+        except Exception as e_template:
+            print(f"ERRO DE TEMPLATE: {e_template}")
+            html_content = f"<p>Olá {reserva.cliente.nome}, sua reserva <b>#{reserva.codigo}</b> para {servico_nome} foi recebida!</p>"
+            text_content = f"Olá {reserva.cliente.nome}, sua reserva #{reserva.codigo} para {servico_nome} foi recebida!"
+
+        # Envia de verdade
         send_mail(
             assunto,
             text_content,
-            settings.DEFAULT_FROM_EMAIL,
+            settings.DEFAULT_FROM_EMAIL, # Garanta que isso está no settings.py
             [reserva.cliente.email],
-            html_message=html_content
+            html_message=html_content,
+            fail_silently=False # Agora vai mostrar o erro se falhar!
         )
-        print("E-mail enviado com sucesso!")
+        print("✅ E-MAIL ENVIADO COM SUCESSO!")
+        return True
     except Exception as e:
-        print(f"Erro ao enviar e-mail: {e}")
-        # Não paramos o código aqui para não travar a tela do usuário se o e-mail falhar
+        print(f"❌ ERRO FATAL AO ENVIAR E-MAIL: {e}")
+        return False
 
 def fazer_reserva_passeio(request, praia_id):
     praia = get_object_or_404(Praia, id=praia_id)
-    
-    # Busca 3 sugestões de outros passeios para a barra lateral
     sugestoes = Praia.objects.filter(ativo=True).exclude(id=praia.id)[:3]
 
     if request.method == 'POST':
@@ -149,33 +159,26 @@ def fazer_reserva_passeio(request, praia_id):
         reserva_form = ReservaPublicaForm(request.POST)
         
         if cliente_form.is_valid() and reserva_form.is_valid():
-            # 1. Salva o Cliente
+            # 1. Salva Cliente e Reserva
             cliente = cliente_form.save()
-            
-            # 2. Prepara a Reserva
             reserva = reserva_form.save(commit=False)
             reserva.cliente = cliente
             reserva.praia_destino = praia
             reserva.tipo = 'passeio'
             reserva.status = 'pendente'
-            
-            # --- CORREÇÃO FINAL (PREÇO FIXO / PRIVATIVO) ---
-            # Pega exatamente o valor que está no cadastro do passeio
-            # Se por acaso estiver vazio no cadastro, usa 0.00 para não dar erro
             reserva.valor = praia.valor if praia.valor else 0.00
-            # -----------------------------------------------
-            
-            # 3. Salva a Reserva
             reserva.save()
             
-            # Tenta enviar o e-mail
-            try:
-                enviar_email_reserva(reserva, praia.nome)
-            except:
-                pass 
+            # 2. Envia E-mail (Sem esconder o erro)
+            sucesso_email = enviar_email_reserva(reserva, praia.nome)
             
-            messages.success(request, f"Reserva para {praia.nome} realizada com sucesso! Verifique seu e-mail.")
-            return redirect('reserva_confirmada')
+            if sucesso_email:
+                messages.success(request, f"Reserva confirmada! O voucher foi enviado para {cliente.email}.")
+            else:
+                messages.warning(request, f"Reserva feita, mas houve um erro ao enviar o e-mail. Entre em contato conosco.")
+
+            return redirect('reserva_confirmada') # Redireciona para evitar reenvio de formulário
+            
     else:
         cliente_form = ClientePublicoForm()
         reserva_form = ReservaPublicaForm()
