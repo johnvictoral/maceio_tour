@@ -115,12 +115,14 @@ def lista_de_posts(request):
     return render(request, 'core/lista_posts.html', {'posts': posts})
 
 # --- FUNÇÃO DE ENVIAR E-MAIL (Auxiliar) ---
+# --- FUNÇÃO DE ENVIAR E-MAIL (COM DIAGNÓSTICO DE ERRO) ---
 def enviar_email_reserva(reserva, servico_nome):
     print(f"--- TENTANDO ENVIAR E-MAIL PARA {reserva.cliente.email} ---")
+    
     try:
         assunto = f'Confirmação de Reserva #{reserva.codigo} - Vá com John'
         
-        # Tenta achar o template, se não achar, envia texto simples para não travar
+        # Tenta achar o template HTML bonito
         try:
             html_content = render_to_string('core/emails/nova_reserva.html', {
                 'nome_cliente': reserva.cliente.nome,
@@ -129,25 +131,46 @@ def enviar_email_reserva(reserva, servico_nome):
                 'servico': servico_nome,
                 'valor': reserva.valor
             })
-            text_content = strip_tags(html_content)
+            text_content = strip_tags(html_content) # Cria versão texto baseada no HTML
+            
         except Exception as e_template:
+            # --- AQUI ESTÁ O DETETIVE ---
+            # Se der erro no HTML, ele vai mandar o erro escrito no e-mail para você ler
             print(f"ERRO DE TEMPLATE: {e_template}")
-            html_content = f"<p>Olá {reserva.cliente.nome}, sua reserva <b>#{reserva.codigo}</b> para {servico_nome} foi recebida!</p>"
-            text_content = f"Olá {reserva.cliente.nome}, sua reserva #{reserva.codigo} para {servico_nome} foi recebida!"
+            erro_tecnico = str(e_template)
+            
+            html_content = f"""
+            <div style='background-color:#ffe6e6; padding:20px; border:1px solid red;'>
+                <h1 style='color:red;'>ERRO AO GERAR E-MAIL BONITO</h1>
+                <p>O sistema tentou usar o arquivo 'nova_reserva.html' mas falhou.</p>
+                <p><strong>O erro exato foi:</strong></p>
+                <pre style='background:#fff; padding:10px;'>{erro_tecnico}</pre>
+                <hr>
+                <p>Dados da reserva:</p>
+                <ul>
+                    <li>Cliente: {reserva.cliente.nome}</li>
+                    <li>Código: {reserva.codigo}</li>
+                    <li>Serviço: {servico_nome}</li>
+                </ul>
+            </div>
+            """
+            text_content = f"ERRO NO TEMPLATE: {erro_tecnico}"
+            # ---------------------------
 
-        # Envia de verdade
+        # Envia o e-mail (seja o bonito ou o de erro)
         send_mail(
             assunto,
             text_content,
-            settings.DEFAULT_FROM_EMAIL, # Garanta que isso está no settings.py
+            settings.DEFAULT_FROM_EMAIL,
             [reserva.cliente.email],
             html_message=html_content,
-            fail_silently=False # Agora vai mostrar o erro se falhar!
+            fail_silently=False
         )
         print("✅ E-MAIL ENVIADO COM SUCESSO!")
         return True
+
     except Exception as e:
-        print(f"❌ ERRO FATAL AO ENVIAR E-MAIL: {e}")
+        print(f"❌ ERRO FATAL AO ENVIAR E-MAIL (CONEXÃO/SENHA): {e}")
         return False
 
 def fazer_reserva_passeio(request, praia_id):
