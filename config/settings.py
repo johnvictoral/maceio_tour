@@ -164,7 +164,7 @@ MERCADO_PAGO_ACCESS_TOKEN = 'APP_USR-641550262322150-093021-7fb6107eb6a4884acf68
 
 # Configuração de E-mail (Protegida)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.titan.email'
+EMAIL_HOST = 'smtp.hostinger.com'
 EMAIL_PORT = 465
 EMAIL_USE_SSL = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
