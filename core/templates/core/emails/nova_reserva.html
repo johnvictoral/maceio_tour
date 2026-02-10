@@ -1,41 +1,74 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <style>
-        body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
-        .header { background-color: #117864; color: white; padding: 20px; text-align: center; }
-        .content { padding: 30px; background-color: #fff; }
-        .footer { background-color: #f9f9f9; padding: 15px; text-align: center; font-size: 12px; color: #666; }
-        .btn { display: inline-block; padding: 10px 20px; background-color: #F39C12; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 20px; }
-        .info-box { background-color: #f0f8ff; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #117864; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmação de Solicitação</title>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Recebemos seu Pedido! 🌴</h1>
-        </div>
-        <div class="content">
-            <p>Olá, <strong>{{ nome_cliente }}</strong>!</p>
-            <p>Obrigado por escolher a <strong>Vá com John</strong>. Recebemos sua solicitação de reserva e já estamos verificando a disponibilidade.</p>
-            
-            <div class="info-box">
-                <p><strong>Código do Pedido:</strong> #{{ codigo }}</p>
-                <p><strong>Data da Viagem:</strong> {{ data_viagem }}</p>
-                <p><strong>Serviço:</strong> {{ servico }}</p>
-                <p><strong>Status Atual:</strong> <span style="color: #e67e22;">Pendente (Aguardando Confirmação)</span></p>
-            </div>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f4f4; color: #333;">
 
-            <p>Nossa equipe entrará em contato em breve (via WhatsApp ou E-mail) para confirmar os detalhes e o pagamento.</p>
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        
+        <tr>
+            <td style="background-color: #198754; padding: 30px; text-align: center; color: #ffffff;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: bold;">Vá com John Turismo</h1>
+                <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Maceió - Alagoas</p>
+            </td>
+        </tr>
 
-            <a href="https://vacomjohn.com.br/consultar-reserva/" class="btn">Acompanhar Minha Reserva</a>
-        </div>
-        <div class="footer">
-            <p><strong>Vá com John Turismo e Receptivo</strong><br>
-            Maceió - Alagoas | (82) 99932-5548<br>
-            <a href="https://vacomjohn.com.br">www.vacomjohn.com.br</a></p>
-        </div>
-    </div>
+        <tr>
+            <td style="padding: 30px;">
+                <p style="font-size: 18px; margin-bottom: 20px;">Olá, <strong>{{ nome_cliente }}</strong>! 👋</p>
+                
+                <p style="line-height: 1.6; color: #555;">
+                    Recebemos sua solicitação de reserva com sucesso! 🎉<br>
+                    Nossa equipe já está analisando a disponibilidade para a data escolhida.
+                </p>
+
+                <div style="background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; text-align: center; margin: 25px 0; font-weight: bold; border: 1px solid #ffeeba;">
+                    🟡 Status atual: Aguardando Confirmação
+                </div>
+
+                <table border="0" cellpadding="10" cellspacing="0" width="100%" style="border-collapse: collapse; margin-bottom: 20px;">
+                    <tr style="border-bottom: 1px solid #eeeeee;">
+                        <td style="color: #888; width: 40%;">Código do Pedido:</td>
+                        <td style="font-family: monospace; font-size: 16px; font-weight: bold; color: #333;">#{{ codigo }}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #eeeeee;">
+                        <td style="color: #888;">Serviço / Passeio:</td>
+                        <td style="font-weight: bold; color: #198754;">{{ servico }}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #eeeeee;">
+                        <td style="color: #888;">Data da Viagem:</td>
+                        <td style="font-weight: bold;">{{ data_viagem|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% if valor %}
+                    <tr>
+                        <td style="color: #888;">Valor Estimado:</td>
+                        <td style="font-weight: bold;">R$ {{ valor }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+
+                <p style="margin-top: 30px; text-align: center; font-size: 14px; color: #666;">
+                    Entraremos em contato via WhatsApp em breve para finalizar o pagamento e enviar seu voucher.
+                </p>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="https://wa.me/5582999325548" style="background-color: #25D366; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 50px; font-weight: bold; font-size: 16px; display: inline-block;">
+                        Falar no WhatsApp Agora
+                    </a>
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td style="background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eeeeee;">
+                <p style="margin: 0;">© 2026 Vá com John Turismo. Todos os direitos reservados.</p>
+                <p style="margin: 5px 0 0 0;">Este é um e-mail automático, por favor não responda.</p>
+            </td>
+        </tr>
+    </table>
+
 </body>
 </html>

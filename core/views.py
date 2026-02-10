@@ -199,8 +199,10 @@ def fazer_reserva_transfer(request, transfer_id):
         reserva_form = ReservaPublicaForm(request.POST)
         
         if cliente_form.is_valid() and reserva_form.is_valid():
+            # 1. Salva Cliente
             cliente = cliente_form.save()
             
+            # 2. Salva Reserva
             reserva = reserva_form.save(commit=False)
             reserva.cliente = cliente
             reserva.tipo = 'transfer'
@@ -209,10 +211,14 @@ def fazer_reserva_transfer(request, transfer_id):
             reserva.valor = transfer.valor
             reserva.save()
             
-            # --- ENVIA O E-MAIL AQUI ---
-            enviar_email_reserva(reserva, f"Transfer: {transfer.titulo}")
+            # 3. Envia E-mail (Com verificação de sucesso)
+            sucesso_email = enviar_email_reserva(reserva, f"Transfer: {transfer.titulo}")
             
-            messages.success(request, f"Solicitação de Transfer '{transfer.titulo}' enviada! Verifique seu e-mail.")
+            if sucesso_email:
+                messages.success(request, f"Solicitação de Transfer '{transfer.titulo}' enviada! Verifique seu e-mail.")
+            else:
+                messages.warning(request, f"Solicitação recebida, mas houve um erro ao enviar o e-mail de confirmação.")
+
             return redirect('reserva_confirmada')
     else:
         cliente_form = ClientePublicoForm()
