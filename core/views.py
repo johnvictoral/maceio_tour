@@ -140,6 +140,8 @@ def enviar_email_reserva(reserva, servico_nome):
 
 def fazer_reserva_passeio(request, praia_id):
     praia = get_object_or_404(Praia, id=praia_id)
+    
+    # Busca 3 sugestões de outros passeios para a barra lateral
     sugestoes = Praia.objects.filter(ativo=True).exclude(id=praia.id)[:3]
 
     if request.method == 'POST':
@@ -147,17 +149,30 @@ def fazer_reserva_passeio(request, praia_id):
         reserva_form = ReservaPublicaForm(request.POST)
         
         if cliente_form.is_valid() and reserva_form.is_valid():
+            # 1. Salva o Cliente
             cliente = cliente_form.save()
             
+            # 2. Prepara a Reserva
             reserva = reserva_form.save(commit=False)
             reserva.cliente = cliente
             reserva.praia_destino = praia
             reserva.tipo = 'passeio'
             reserva.status = 'pendente'
+            
+            # --- CORREÇÃO FINAL (PREÇO FIXO / PRIVATIVO) ---
+            # Pega exatamente o valor que está no cadastro do passeio
+            # Se por acaso estiver vazio no cadastro, usa 0.00 para não dar erro
+            reserva.valor = praia.valor if praia.valor else 0.00
+            # -----------------------------------------------
+            
+            # 3. Salva a Reserva
             reserva.save()
             
-            # --- ENVIA O E-MAIL AQUI ---
-            enviar_email_reserva(reserva, praia.nome)
+            # Tenta enviar o e-mail
+            try:
+                enviar_email_reserva(reserva, praia.nome)
+            except:
+                pass 
             
             messages.success(request, f"Reserva para {praia.nome} realizada com sucesso! Verifique seu e-mail.")
             return redirect('reserva_confirmada')
