@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -161,11 +162,11 @@ STATICFILES_DIRS = [
 # MERCADO PAGO
 MERCADO_PAGO_ACCESS_TOKEN = 'APP_USR-641550262322150-093021-7fb6107eb6a4884acf6857b5d5dbf0cc-27923389'
 
-# --- CONFIGURAÇÃO DE E-MAIL (SMTP HOSTINGER/TITAN) ---
+# Configuração de E-mail (Protegida)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.titan.email'  # Servidor da Hostinger (Titan)
+EMAIL_HOST = 'smtp.titan.email'
 EMAIL_PORT = 465
-EMAIL_USE_SSL = True             # Segurança ativada
-EMAIL_HOST_USER = 'reservas@vacomjohn.com.br'
-EMAIL_HOST_PASSWORD = '190382Jvc@'  # <--- Coloque sua senha real aqui entre as aspas
-DEFAULT_FROM_EMAIL = 'Vá com John <contato@vacomjohn.com.br>'
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = 'Vá com John <reservas@vacomjohn.com.br>'
