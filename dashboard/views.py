@@ -47,89 +47,47 @@ from .utils import render_to_pdf
 # 1. FUNÇÕES AUXILIARES NOVAS (GERAR PDF E ENVIAR EMAIL)
 # =======================================================
 
-def gerar_voucher_pdf_interno(reserva):
-    """Gera o PDF do Voucher na memória usando ReportLab (Rápido)"""
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-    
-    # --- CABEÇALHO ---
-    p.setFillColor(colors.darkgreen)
-    p.setFont("Helvetica-Bold", 24)
-    p.drawString(50, 800, "VÁ COM JOHN TURISMO")
-    
-    p.setFillColor(colors.black)
-    p.setFont("Helvetica", 12)
-    p.drawString(50, 780, "Maceió - Alagoas | CNPJ: JVC Turismo")
-    p.drawString(50, 765, "WhatsApp: (82) 99932-5548")
-    p.line(50, 750, 550, 750)
-    
-    # --- TÍTULO ---
-    p.setFont("Helvetica-Bold", 18)
-    p.drawCentredString(width/2, 720, f"VOUCHER DE CONFIRMAÇÃO #{reserva.codigo}")
-    
-    # --- DADOS ---
-    y = 680
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(50, y, "DADOS DO CLIENTE")
-    y -= 25
-    p.setFont("Helvetica", 12)
-    p.drawString(50, y, f"Nome: {reserva.cliente.nome} {reserva.cliente.sobrenome}")
-    p.drawString(50, y-20, f"Email: {reserva.cliente.email}")
-    p.drawString(50, y-40, f"Telefone: {reserva.cliente.telefone}")
-    
-    y -= 80
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(50, y, "DETALHES DO SERVIÇO")
-    y -= 25
-    p.setFont("Helvetica", 12)
-    
-    servico = "Serviço Personalizado"
-    if reserva.praia_destino:
-        servico = f"Passeio: {reserva.praia_destino.nome}"
-    elif reserva.tipo == 'transfer':
-        servico = f"Transfer: {reserva.local_chegada or 'Ida/Volta'}"
+def gerar_voucher_pdf_interno(reserva, request):
+    """
+    Gera o PDF do Voucher usando o Template HTML bonito (WeasyPrint)
+    """
+    try:
+        # 1. Prepara o contexto (dados para o HTML)
+        context = {
+            'reserva': reserva,
+            # Se precisar de imagem estática, use request.build_absolute_uri
+            'request': request, 
+        }
         
-    p.drawString(50, y, f"Serviço: {servico}")
-    
-    data_formatada = reserva.data_agendamento.strftime('%d/%m/%Y às %H:%M')
-    p.drawString(50, y-20, f"Data: {data_formatada}")
-    p.drawString(50, y-40, f"Passageiros: {reserva.numero_passageiros}")
-    
-    if reserva.local_partida:
-        p.drawString(50, y-60, f"Local de Saída: {reserva.local_partida}")
-
-    # --- GUIA ---
-    if reserva.guia:
-        y -= 110
-        p.setFillColor(colors.aliceblue)
-        p.rect(40, y-80, 515, 95, fill=1, stroke=0)
-        p.setFillColor(colors.darkblue)
-        p.setFont("Helvetica-Bold", 14)
-        p.drawString(50, y, "SEU MOTORISTA / GUIA")
-        p.setFont("Helvetica-Bold", 12)
-        p.drawString(50, y-25, f"Nome: {reserva.guia.nome}")
-        p.setFont("Helvetica", 12)
-        p.drawString(50, y-45, f"Veículo: {reserva.guia.modelo_carro} - {reserva.guia.cor_carro}")
-        p.drawString(300, y-45, f"Placa: {reserva.guia.placa_carro}")
-        p.drawString(50, y-65, f"Telefone: {reserva.guia.telefone}")
-
-    p.showPage()
-    p.save()
-    buffer.seek(0)
-    return buffer
+        # 2. Renderiza o HTML (Lê o arquivo voucher_email.html)
+        html_string = render_to_string('dashboard/voucher_email.html', context)
+        
+        # 3. Converte para PDF usando WeasyPrint
+        # base_url garante que o CSS e Imagens carreguem certo
+        html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
+        pdf_bytes = html.write_pdf()
+        
+        return pdf_bytes
+        
+    except Exception as e:
+        print(f"ERRO AO GERAR PDF WEASYPRINT: {e}")
+        return None
 
 def disparar_email_confirmacao(request, reserva):
-    """Função que monta o e-mail, gera o PDF e envia tudo"""
+    """Função que monta o e-mail, gera o PDF (HTML) e envia tudo"""
     try:
         print(f"--- DISPARANDO E-MAIL COM PDF PARA {reserva.cliente.email} ---")
         servico_nome = reserva.praia_destino.nome if reserva.praia_destino else (reserva.local_chegada or "Transfer")
         
-        # 1. Gera o PDF
-        pdf_buffer = gerar_voucher_pdf_interno(reserva)
+        # 1. Gera o PDF (Agora usando o HTML Bonito)
+        pdf_bytes = gerar_voucher_pdf_interno(reserva, request)
+        
+        if not pdf_bytes:
+            print("FALHA AO GERAR PDF. ENVIANDO SEM ANEXO.")
+        
         filename = f"Voucher_{reserva.codigo}.pdf"
 
-        # 2. Renderiza o HTML do E-mail
+        # 2. Renderiza o HTML do Corpo do E-mail
         try:
             html_content = render_to_string('core/emails/reserva_confirmada.html', {
                 'nome_cliente': reserva.cliente.nome,
@@ -152,7 +110,10 @@ def disparar_email_confirmacao(request, reserva):
             to=[reserva.cliente.email]
         )
         email.attach_alternative(html_content, "text/html")
-        email.attach(filename, pdf_buffer.getvalue(), 'application/pdf')
+        
+        # Anexa o PDF se ele foi gerado com sucesso
+        if pdf_bytes:
+            email.attach(filename, pdf_bytes, 'application/pdf')
         
         email.send()
         messages.success(request, f"✅ E-mail com Voucher PDF enviado para {reserva.cliente.nome}!")

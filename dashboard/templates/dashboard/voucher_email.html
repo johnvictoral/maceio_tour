@@ -1,0 +1,249 @@
+{% load static %}
+<!DOCTYPE HTML>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <title>Voucher #{{ reserva.codigo }}</title>
+    <style type="text/css">
+        @page { size: A4 portrait; margin: 0; }
+        
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            font-size: 11px;
+        }
+
+        /* CABEÇALHO SÓLIDO */
+        .header-bg {
+            background-color: #117864;
+            color: #fff;
+            padding: 30px 40px;
+            height: 90px;
+        }
+        .company-title { font-size: 26px; font-weight: bold; text-transform: uppercase; margin: 0; }
+        .company-subtitle { font-size: 12px; opacity: 0.9; margin-top: 5px; }
+        
+        /* BOX DA DIREITA (ONDE FICA O VOUCHER) */
+        .voucher-box {
+            float: right;
+            text-align: right;
+        }
+        .doc-type { 
+            font-size: 24px; 
+            font-weight: bold; 
+            letter-spacing: 3px; 
+            color: #F39C12; /* Laranja da marca para destaque */
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .voucher-code { font-size: 16px; color: #fff; font-weight: bold; }
+
+        /* CORPO */
+        .content { padding: 40px; }
+
+        /* SEÇÕES */
+        .section-header {
+            border-bottom: 2px solid #117864;
+            color: #117864;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+        }
+
+        /* TABELAS */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        td { vertical-align: top; padding: 6px 8px; }
+        
+        tr.row-bg { background-color: #f4f4f4; }
+
+        .label { font-size: 9px; color: #666; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 2px; }
+        .value { font-size: 12px; color: #000; font-weight: normal; }
+        .value-bold { font-size: 13px; font-weight: bold; color: #000; }
+
+        /* CHECKBOXES */
+        .checkbox-area { 
+            border: 1px solid #ddd; 
+            background: #fafafa; 
+            padding: 10px; 
+            border-radius: 4px; 
+            font-size: 11px;
+        }
+        .cb-item { display: inline-block; margin-right: 15px; color: #555; }
+        .cb-checked { color: #117864; font-weight: bold; }
+
+        /* DESTAQUE DE VALOR */
+        .price-box {
+            background-color: #117864;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        /* RODAPÉ E ASSINATURA */
+        .legal-text { font-size: 9px; color: #777; text-align: justify; margin-top: 10px; line-height: 1.3; }
+        
+        .signature-area { margin-top: 50px; text-align: center; }
+        .sig-line { border-top: 1px solid #333; width: 40%; margin: 0 auto 5px auto; }
+        
+        .footer-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background-color: #eee; color: #555;
+            text-align: center; padding: 10px;
+            font-size: 9px; border-top: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-bg">
+        <div style="float: left;">
+            <div class="company-title">Vá com John</div>
+            <div class="company-subtitle">Turismo & Receptivo VIP • CNPJ: 58.788.134/0001-20</div>
+            <div style="font-size: 10px; margin-top: 5px;">Cadastur: 02.109531.21-6</div>
+            <div style="font-size: 10px; margin-top: 2px; font-weight: bold;">www.vacomjohn.com.br</div>
+        </div>
+        
+        <div class="voucher-box">
+            <div class="doc-type">VOUCHER</div>
+            <div class="voucher-code">Reserva: #{{ reserva.codigo }}</div>
+            <div style="font-size: 11px; margin-top: 5px; color: #ddd;">Emissão: {% now "d/m/Y" %}</div>
+        </div>
+    </div>
+
+    <div class="content">
+
+        <div class="section-header">1. Dados do Contratante (Passageiro)</div>
+        <table>
+            <tr class="row-bg">
+                <td width="50%">
+                    <span class="label">Nome Responsável</span>
+                    <span class="value-bold">{{ reserva.cliente.nome }} {{ reserva.cliente.sobrenome }}</span>
+                </td>
+                <td width="25%">
+                    <span class="label">Telefone / WhatsApp</span>
+                    <span class="value">{{ reserva.cliente.telefone }}</span>
+                </td>
+                <td width="25%">
+                    <span class="label">Qtd. Passageiros</span>
+                    <span class="value">{{ reserva.numero_passageiros }} Pessoas</span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <span class="label">Local de Hospedagem / Referência</span>
+                    <span class="value">
+                        {% if 'aeroporto' in reserva.local_partida|lower %}
+                            {{ reserva.local_chegada }}
+                        {% else %}
+                            {{ reserva.local_partida }}
+                        {% endif %}
+                    </span>
+                </td>
+            </tr>
+        </table>
+
+        <div class="section-header">2. Configuração do Serviço</div>
+        
+        <div class="checkbox-area">
+            <span class="label" style="margin-bottom: 5px;">MODALIDADE DO SERVIÇO:</span>
+            
+            {% if reserva.tipo == 'transfer' and 'aeroporto' in reserva.local_partida|lower %}
+                <span class="cb-item cb-checked">[ X ] TRANSFER IN (Chegada)</span>
+                <span class="cb-item">[ &nbsp; ] TRANSFER OUT (Saída)</span>
+                <span class="cb-item">[ &nbsp; ] PASSEIO TURÍSTICO</span>
+            {% elif reserva.tipo == 'transfer' and 'aeroporto' in reserva.local_chegada|lower %}
+                <span class="cb-item">[ &nbsp; ] TRANSFER IN (Chegada)</span>
+                <span class="cb-item cb-checked">[ X ] TRANSFER OUT (Saída)</span>
+                <span class="cb-item">[ &nbsp; ] PASSEIO TURÍSTICO</span>
+            {% else %}
+                <span class="cb-item">[ &nbsp; ] TRANSFER IN</span>
+                <span class="cb-item">[ &nbsp; ] TRANSFER OUT</span>
+                <span class="cb-item cb-checked">[ X ] PASSEIO TURÍSTICO</span>
+            {% endif %}
+        </div>
+
+        <table style="margin-top: 10px;">
+            <tr class="row-bg">
+                <td width="33%">
+                    <span class="label">Data Agendada</span>
+                    <span class="value-bold" style="font-size: 16px; color: #117864;">{{ reserva.data_agendamento|date:"d/m/Y" }}</span>
+                </td>
+                <td width="33%">
+                    <span class="label">Horário</span>
+                    <span class="value-bold" style="font-size: 16px;">{{ reserva.data_agendamento|date:"H:i" }}</span>
+                </td>
+                <td width="33%">
+                    <span class="label">Nº Voo / Observação</span>
+                    <span class="value">{{ reserva.informacoes_voo|default:"---" }}</span>
+                </td>
+            </tr>
+        </table>
+
+        <div class="section-header">3. Itinerário / Roteiro</div>
+        <table>
+            <tr>
+                <td width="50%" style="border-right: 1px solid #ddd;">
+                    <span class="label">Origem (Embarque)</span>
+                    <span class="value-bold">{{ reserva.local_partida }}</span>
+                </td>
+                <td width="50%" style="padding-left: 15px;">
+                    <span class="label">Destino (Desembarque/Passeio)</span>
+                    <span class="value-bold">
+                        {% if reserva.tipo == 'passeio' %}
+                            {{ reserva.praia_destino.nome }}
+                        {% else %}
+                            {{ reserva.local_chegada }}
+                        {% endif %}
+                    </span>
+                </td>
+            </tr>
+        </table>
+
+        {% if reserva.guia %}
+        <div style="background: #fafafa; padding: 10px; border-left: 4px solid #F39C12; margin-top: 10px;">
+            <span class="label">Motorista / Guia Designado</span>
+            <span class="value-bold">{{ reserva.guia.nome }}</span>
+            <span class="value"> • {{ reserva.guia.modelo_carro }} ({{ reserva.guia.placa_carro }})</span>
+        </div>
+        {% endif %}
+
+
+        <div class="section-header">4. Validação</div>
+        
+        <table style="margin-top: 10px;">
+            <tr>
+                <td width="70%">
+                    <div class="legal-text">
+                        <strong>Termos:</strong> O passageiro declara estar ciente dos horários e condições do serviço. Cancelamentos devem ser informados com antecedência mínima de 24h. Este documento serve como comprovante de reserva e contrato de prestação de serviço.
+                    </div>
+                </td>
+                <td width="30%" align="right" valign="middle">
+                    <div class="price-box">
+                        <div style="font-size: 9px; text-transform: uppercase;">Valor Total</div>
+                        <div style="font-size: 18px; font-weight: bold;">R$ {{ reserva.valor|floatformat:2 }}</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <div class="signature-area">
+            <div class="sig-line"></div>
+            <div style="font-size: 11px; font-weight: bold;">Vá com John Receptivo</div>
+            <div style="font-size: 9px; color: #666;">Assinatura do Responsável</div>
+        </div>
+
+    </div>
+
+    <div class="footer-bar">
+        Vá com John Turismo • www.vacomjohn.com.br • (82) 99932-5548 • Maceió/AL • Consulte sua reserva online: vacomjohn.pythonanywhere.com/minha-reserva
+    </div>
+
+</body>
+</html>
