@@ -1,17 +1,192 @@
 import json
 import os
+import io # <--- Importante para o PDF
 from datetime import datetime
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.conf import settings
-from django.core.mail import send_mail # <--- Importante para enviar e-mail
-from django.template.loader import render_to_string # <--- Importante para ler o HTML
-from django.utils.html import strip_tags # <--- Importante para segurança do e-mail
+from django.core.mail import send_mail, EmailMultiAlternatives # <--- Importante para anexo
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
-from .models import ImagemCarrossel, Praia, Transfer, Depoimento, Post, Reserva
+# --- Importações para Gerar PDF ---
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+
+# Adicionei 'Guia' nas importações
+from .models import ImagemCarrossel, Praia, Transfer, Depoimento, Post, Reserva, Guia
 from .forms import ClientePublicoForm, ReservaPublicaForm
 from .mares_data import DADOS_MARES_2026
+
+# =======================================================
+# 1. FUNÇÕES AUXILIARES (PDF E EMAIL DE CONFIRMAÇÃO)
+# =======================================================
+
+def gerar_voucher_pdf(reserva):
+    """Gera o PDF do Voucher na memória"""
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    
+    # --- CABEÇALHO ---
+    p.setFillColor(colors.darkgreen)
+    p.setFont("Helvetica-Bold", 24)
+    p.drawString(50, 800, "VÁ COM JOHN TURISMO")
+    
+    p.setFillColor(colors.black)
+    p.setFont("Helvetica", 12)
+    p.drawString(50, 780, "Maceió - Alagoas | CNPJ: JVC Turismo")
+    p.drawString(50, 765, "WhatsApp: (82) 99932-5548")
+    p.line(50, 750, 550, 750)
+    
+    # --- TÍTULO ---
+    p.setFont("Helvetica-Bold", 18)
+    p.drawCentredString(width/2, 720, f"VOUCHER DE CONFIRMAÇÃO #{reserva.codigo}")
+    
+    # --- DADOS ---
+    y = 680
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, y, "DADOS DO CLIENTE")
+    y -= 25
+    p.setFont("Helvetica", 12)
+    p.drawString(50, y, f"Nome: {reserva.cliente.nome} {reserva.cliente.sobrenome}")
+    p.drawString(50, y-20, f"Email: {reserva.cliente.email}")
+    p.drawString(50, y-40, f"Telefone: {reserva.cliente.telefone}")
+    
+    y -= 80
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, y, "DETALHES DO SERVIÇO")
+    y -= 25
+    p.setFont("Helvetica", 12)
+    
+    servico = "Serviço Personalizado"
+    if reserva.praia_destino:
+        servico = f"Passeio: {reserva.praia_destino.nome}"
+    elif reserva.tipo == 'transfer':
+        servico = f"Transfer: {reserva.local_chegada or 'Ida/Volta'}"
+        
+    p.drawString(50, y, f"Serviço: {servico}")
+    
+    data_formatada = reserva.data_agendamento.strftime('%d/%m/%Y às %H:%M')
+    p.drawString(50, y-20, f"Data: {data_formatada}")
+    p.drawString(50, y-40, f"Passageiros: {reserva.numero_passageiros}")
+    
+    if reserva.local_partida:
+        p.drawString(50, y-60, f"Local de Saída: {reserva.local_partida}")
+
+    # --- GUIA ---
+    if reserva.guia:
+        y -= 110
+        p.setFillColor(colors.aliceblue)
+        p.rect(40, y-80, 515, 95, fill=1, stroke=0)
+        p.setFillColor(colors.darkblue)
+        p.setFont("Helvetica-Bold", 14)
+        p.drawString(50, y, "SEU MOTORISTA / GUIA")
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(50, y-25, f"Nome: {reserva.guia.nome}")
+        p.setFont("Helvetica", 12)
+        p.drawString(50, y-45, f"Veículo: {reserva.guia.modelo_carro} - {reserva.guia.cor_carro}")
+        p.drawString(300, y-45, f"Placa: {reserva.guia.placa_carro}")
+        p.drawString(50, y-65, f"Telefone: {reserva.guia.telefone}")
+
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    return buffer
+
+def disparar_email_confirmacao(request, reserva):
+    """Envia o e-mail de confirmação com o PDF em anexo"""
+    try:
+        print(f"--- PREPARANDO E-MAIL COM PDF PARA {reserva.cliente.email} ---")
+        servico_nome = reserva.praia_destino.nome if reserva.praia_destino else (reserva.local_chegada or "Transfer")
+        
+        # HTML do corpo do e-mail
+        # Tenta renderizar o HTML, se não existir, usa texto simples
+        try:
+            html_content = render_to_string('core/emails/reserva_confirmada.html', {
+                'nome_cliente': reserva.cliente.nome,
+                'codigo': reserva.codigo,
+                'data_viagem': reserva.data_agendamento,
+                'servico': servico_nome,
+                'guia': reserva.guia,
+            })
+        except:
+            html_content = f"<p>Sua reserva #{reserva.codigo} foi confirmada!</p>"
+
+        text_content = strip_tags(html_content)
+        
+        # Gera o PDF
+        pdf_buffer = gerar_voucher_pdf(reserva)
+        filename = f"Voucher_{reserva.codigo}.pdf"
+
+        # Monta o e-mail
+        email = EmailMultiAlternatives(
+            subject=f'Reserva CONFIRMADA + Voucher #{reserva.codigo}',
+            body=text_content,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[reserva.cliente.email]
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.attach(filename, pdf_buffer.getvalue(), 'application/pdf')
+        
+        email.send()
+        messages.success(request, f"✅ E-mail com Voucher PDF enviado para {reserva.cliente.nome}!")
+        return True
+    except Exception as e:
+        print(f"ERRO AO ENVIAR EMAIL: {e}")
+        messages.warning(request, f"Reserva salva, mas erro ao enviar e-mail: {e}")
+        return False
+
+# =======================================================
+# 2. VIEWS DO DASHBOARD (NOVA LÓGICA)
+# =======================================================
+
+def detalhe_reserva(request, reserva_id):
+    """View para gerenciar a reserva no Dashboard"""
+    reserva = get_object_or_404(Reserva, id=reserva_id)
+    guias = Guia.objects.filter(ativo=True)
+
+    if request.method == 'POST':
+        
+        # --- CASO 1: Alteração de Status (Botões Confirmar/Cancelar) ---
+        if 'status' in request.POST:
+            novo_status = request.POST.get('status')
+            reserva.status = novo_status
+            reserva.save()
+            
+            # SE CONFIRMOU, ENVIA O EMAIL
+            if novo_status == 'confirmado':
+                disparar_email_confirmacao(request, reserva)
+            else:
+                messages.success(request, f"Status atualizado para {reserva.get_status_display()}!")
+            
+            return redirect('detalhe_reserva', reserva_id=reserva.id)
+
+        # --- CASO 2: Atribuir Guia (Botão Salvar Guia) ---
+        if 'guia' in request.POST:
+            guia_id = request.POST.get('guia')
+            if guia_id:
+                guia_escolhido = get_object_or_404(Guia, id=guia_id)
+                reserva.guia = guia_escolhido
+                reserva.save()
+                messages.success(request, f"Guia {guia_escolhido.nome} atribuído com sucesso!")
+                
+                # Se a reserva JÁ ESTAVA confirmada, reenvia o voucher atualizado com o guia
+                if reserva.status == 'confirmado':
+                    disparar_email_confirmacao(request, reserva)
+            
+            return redirect('detalhe_reserva', reserva_id=reserva.id)
+
+    return render(request, 'core/detalhe_reserva.html', {
+        'reserva': reserva,
+        'guias': guias
+    })
+
+# =======================================================
+# 3. VIEWS DO SITE (EXISTENTES)
+# =======================================================
 
 def home(request):
     imagens_carrossel = ImagemCarrossel.objects.filter(ativo=True)
@@ -114,34 +289,29 @@ def lista_de_posts(request):
     posts = Post.objects.filter(status='publicado').order_by('-data_publicacao')
     return render(request, 'core/lista_posts.html', {'posts': posts})
 
-# --- FUNÇÃO DE ENVIAR E-MAIL (CORRIGIDA E FINAL) ---
+# --- FUNÇÃO DE ENVIAR E-MAIL INICIAL (CLIENTE SOLICITOU) ---
 def enviar_email_reserva(reserva, servico_nome):
     print(f"--- TENTANDO ENVIAR E-MAIL PARA {reserva.cliente.email} ---")
     
     try:
         assunto = f'Confirmação de Reserva #{reserva.codigo} - Vá com John'
         
-        # Prepara os dados para o e-mail
-        # AQUI ESTAVA O ERRO: O campo certo é data_agendamento!
         contexto = {
             'nome_cliente': reserva.cliente.nome,
             'codigo': reserva.codigo,
-            'data_viagem': reserva.data_agendamento, # <--- CORRIGIDO AQUI (Era data_viagem)
+            'data_viagem': reserva.data_agendamento,
             'servico': servico_nome,
             'valor': reserva.valor
         }
 
-        # Tenta criar o HTML bonito
         try:
             html_content = render_to_string('core/emails/nova_reserva.html', contexto)
-            text_content = strip_tags(html_content) # Cria versão texto
+            text_content = strip_tags(html_content)
         except Exception as e_template:
-            # Se der erro no HTML (agora não deve dar mais), manda texto simples
             print(f"ERRO DE TEMPLATE (Mas vamos enviar texto): {e_template}")
             html_content = f"<p>Olá {reserva.cliente.nome}, sua reserva <b>#{reserva.codigo}</b> foi recebida!</p>"
             text_content = f"Olá {reserva.cliente.nome}, sua reserva #{reserva.codigo} foi recebida!"
 
-        # Envia de verdade
         send_mail(
             assunto,
             text_content,
@@ -166,7 +336,6 @@ def fazer_reserva_passeio(request, praia_id):
         reserva_form = ReservaPublicaForm(request.POST)
         
         if cliente_form.is_valid() and reserva_form.is_valid():
-            # 1. Salva Cliente e Reserva
             cliente = cliente_form.save()
             reserva = reserva_form.save(commit=False)
             reserva.cliente = cliente
@@ -176,7 +345,6 @@ def fazer_reserva_passeio(request, praia_id):
             reserva.valor = praia.valor if praia.valor else 0.00
             reserva.save()
             
-            # 2. Envia E-mail (Sem esconder o erro)
             sucesso_email = enviar_email_reserva(reserva, praia.nome)
             
             if sucesso_email:
@@ -184,7 +352,7 @@ def fazer_reserva_passeio(request, praia_id):
             else:
                 messages.warning(request, f"Reserva feita, mas houve um erro ao enviar o e-mail. Entre em contato conosco.")
 
-            return redirect('reserva_confirmada') # Redireciona para evitar reenvio de formulário
+            return redirect('reserva_confirmada')
             
     else:
         cliente_form = ClientePublicoForm()
@@ -206,10 +374,8 @@ def fazer_reserva_transfer(request, transfer_id):
         reserva_form = ReservaPublicaForm(request.POST)
         
         if cliente_form.is_valid() and reserva_form.is_valid():
-            # 1. Salva Cliente
             cliente = cliente_form.save()
             
-            # 2. Salva Reserva
             reserva = reserva_form.save(commit=False)
             reserva.cliente = cliente
             reserva.tipo = 'transfer'
@@ -218,7 +384,6 @@ def fazer_reserva_transfer(request, transfer_id):
             reserva.valor = transfer.valor
             reserva.save()
             
-            # 3. Envia E-mail (Com verificação de sucesso)
             sucesso_email = enviar_email_reserva(reserva, f"Transfer: {transfer.titulo}")
             
             if sucesso_email:
