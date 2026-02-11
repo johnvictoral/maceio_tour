@@ -1,20 +1,29 @@
 from django.shortcuts import render, redirect, get_object_or_404
 import base64
-import os              # <--- ADICIONE
+import os
+import io # <--- IMPORTANTE PARA O PDF NOVO
+import datetime
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
-from django.http import HttpResponse
-from django.db.models import Sum
+from django.http import HttpResponse, JsonResponse # Adicionei JsonResponse para o calendário
+from django.db.models import Sum, Q
 from django.db.models.functions import TruncMonth
-import datetime
 from django.template.loader import render_to_string
-from django.db.models import Q
-from weasyprint import HTML
 from django.urls import reverse
-from django.contrib.auth.views import LoginView # <--- ESSA LINHA RESOLVE O SEU ERRO ATUAL
+from django.contrib.auth.views import LoginView
 from django.utils.text import slugify
+from django.utils.html import strip_tags # <--- IMPORTANTE PARA EMAIL
+from django.core.mail import EmailMultiAlternatives # <--- IMPORTANTE PARA ANEXO
+
+from weasyprint import HTML
+
+# --- IMPORTAÇÕES DO REPORTLAB (PARA O VOUCHER AUTOMÁTICO) ---
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+
 # Seus formulários
 from .forms import (
     ImagemCarrosselForm, 
@@ -25,16 +34,137 @@ from .forms import (
     PraiaForm, 
     ClienteForm,
     DepoimentoForm,
-    CarrosselForm
+    CarrosselForm,
+    PostForm,
+    TransferForm
 )
 
-# Seus modelos (Vindos do core)
-from core.models import Reserva, Cliente, Praia, Guia, ImagemCarrossel, Depoimento, Post,Transfer
-from .forms import PostForm
-from .forms import TransferForm
-#######
-from .utils import render_to_pdf # Importe a função nova
-# --- VIEWS DE AUTENTICAÇÃO E PAINEL PRINCIPAL ---
+# Seus modelos
+from core.models import Reserva, Cliente, Praia, Guia, ImagemCarrossel, Depoimento, Post, Transfer
+from .utils import render_to_pdf
+
+# =======================================================
+# 1. FUNÇÕES AUXILIARES NOVAS (GERAR PDF E ENVIAR EMAIL)
+# =======================================================
+
+def gerar_voucher_pdf_interno(reserva):
+    """Gera o PDF do Voucher na memória usando ReportLab (Rápido)"""
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    
+    # --- CABEÇALHO ---
+    p.setFillColor(colors.darkgreen)
+    p.setFont("Helvetica-Bold", 24)
+    p.drawString(50, 800, "VÁ COM JOHN TURISMO")
+    
+    p.setFillColor(colors.black)
+    p.setFont("Helvetica", 12)
+    p.drawString(50, 780, "Maceió - Alagoas | CNPJ: JVC Turismo")
+    p.drawString(50, 765, "WhatsApp: (82) 99932-5548")
+    p.line(50, 750, 550, 750)
+    
+    # --- TÍTULO ---
+    p.setFont("Helvetica-Bold", 18)
+    p.drawCentredString(width/2, 720, f"VOUCHER DE CONFIRMAÇÃO #{reserva.codigo}")
+    
+    # --- DADOS ---
+    y = 680
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, y, "DADOS DO CLIENTE")
+    y -= 25
+    p.setFont("Helvetica", 12)
+    p.drawString(50, y, f"Nome: {reserva.cliente.nome} {reserva.cliente.sobrenome}")
+    p.drawString(50, y-20, f"Email: {reserva.cliente.email}")
+    p.drawString(50, y-40, f"Telefone: {reserva.cliente.telefone}")
+    
+    y -= 80
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, y, "DETALHES DO SERVIÇO")
+    y -= 25
+    p.setFont("Helvetica", 12)
+    
+    servico = "Serviço Personalizado"
+    if reserva.praia_destino:
+        servico = f"Passeio: {reserva.praia_destino.nome}"
+    elif reserva.tipo == 'transfer':
+        servico = f"Transfer: {reserva.local_chegada or 'Ida/Volta'}"
+        
+    p.drawString(50, y, f"Serviço: {servico}")
+    
+    data_formatada = reserva.data_agendamento.strftime('%d/%m/%Y às %H:%M')
+    p.drawString(50, y-20, f"Data: {data_formatada}")
+    p.drawString(50, y-40, f"Passageiros: {reserva.numero_passageiros}")
+    
+    if reserva.local_partida:
+        p.drawString(50, y-60, f"Local de Saída: {reserva.local_partida}")
+
+    # --- GUIA ---
+    if reserva.guia:
+        y -= 110
+        p.setFillColor(colors.aliceblue)
+        p.rect(40, y-80, 515, 95, fill=1, stroke=0)
+        p.setFillColor(colors.darkblue)
+        p.setFont("Helvetica-Bold", 14)
+        p.drawString(50, y, "SEU MOTORISTA / GUIA")
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(50, y-25, f"Nome: {reserva.guia.nome}")
+        p.setFont("Helvetica", 12)
+        p.drawString(50, y-45, f"Veículo: {reserva.guia.modelo_carro} - {reserva.guia.cor_carro}")
+        p.drawString(300, y-45, f"Placa: {reserva.guia.placa_carro}")
+        p.drawString(50, y-65, f"Telefone: {reserva.guia.telefone}")
+
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    return buffer
+
+def disparar_email_confirmacao(request, reserva):
+    """Função que monta o e-mail, gera o PDF e envia tudo"""
+    try:
+        print(f"--- DISPARANDO E-MAIL COM PDF PARA {reserva.cliente.email} ---")
+        servico_nome = reserva.praia_destino.nome if reserva.praia_destino else (reserva.local_chegada or "Transfer")
+        
+        # 1. Gera o PDF
+        pdf_buffer = gerar_voucher_pdf_interno(reserva)
+        filename = f"Voucher_{reserva.codigo}.pdf"
+
+        # 2. Renderiza o HTML do E-mail
+        try:
+            html_content = render_to_string('core/emails/reserva_confirmada.html', {
+                'nome_cliente': reserva.cliente.nome,
+                'codigo': reserva.codigo,
+                'data_viagem': reserva.data_agendamento,
+                'servico': servico_nome,
+                'guia': reserva.guia,
+            })
+        except Exception as e:
+            print(f"Erro Template Email: {e}")
+            html_content = f"<p>Sua reserva #{reserva.codigo} foi confirmada!</p>"
+
+        text_content = strip_tags(html_content)
+
+        # 3. Monta e Envia
+        email = EmailMultiAlternatives(
+            subject=f'Reserva CONFIRMADA + Voucher #{reserva.codigo}',
+            body=text_content,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[reserva.cliente.email]
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.attach(filename, pdf_buffer.getvalue(), 'application/pdf')
+        
+        email.send()
+        messages.success(request, f"✅ E-mail com Voucher PDF enviado para {reserva.cliente.nome}!")
+        return True
+    except Exception as e:
+        print(f"ERRO AO ENVIAR EMAIL: {e}")
+        messages.warning(request, f"Reserva salva, mas erro ao enviar e-mail: {e}")
+        return False
+
+# =======================================================
+# 2. VIEWS (COM A NOVA LÓGICA NO DETALHE_RESERVA)
+# =======================================================
 
 class CustomLoginView(LoginView):
     template_name = 'dashboard/login.html'
@@ -52,34 +182,18 @@ def painel(request):
     data_filtro = request.GET.get('data')
     busca = request.GET.get('busca')
 
-    # --- AQUI ESTÁ A MUDANÇA MÁGICA ---
-    
-    # Se o usuário NÃO estiver buscando nada específico (visão padrão do dia a dia)
+    # Lógica de Filtros
     if not busca and not data_filtro:
-        # Pega todas as reservas DAQUI PARA FRENTE (maior ou igual a hoje)
-        # E ordena de forma CRESCENTE (a mais próxima aparece primeiro)
         reservas = Reserva.objects.filter(data_agendamento__gte=hoje.date()).order_by('data_agendamento')
-        
-        # Filtra apenas as ativas por padrão (para não poluir com cancelados antigos)
         if not status_filtro:
             reservas = reservas.filter(status__in=['pendente', 'confirmado'])
-            
     else:
-        # Se o usuário estiver BUSCANDO (pelo nome ou data específica)
-        # Mostra tudo (passado e futuro) ordenado do mais recente para o mais antigo
         reservas = Reserva.objects.all().order_by('-data_agendamento')
 
-    # --- FIM DA MUDANÇA PRINCIPAL ---
-
-    # Aplica o filtro de status se o usuário clicou no dropdown
     if status_filtro:
         reservas = reservas.filter(status=status_filtro)
-
-    # Aplica filtro de data específica se selecionado
     if data_filtro:
         reservas = reservas.filter(data_agendamento__date=data_filtro)
-    
-    # Aplica a busca por texto (Nome, Email, ID)
     if busca:
         reservas = reservas.filter(
             Q(cliente__nome__icontains=busca) | 
@@ -88,25 +202,19 @@ def painel(request):
             Q(id__icontains=busca)
         )
 
-    # --- 3. CÁLCULOS FINANCEIROS (KPIs) ---
-    
-    # Faturamento deste Mês
+    # 3. Cálculos Financeiros (KPIs)
     faturamento_mes = Reserva.objects.filter(
         data_agendamento__month=mes_atual,
         data_agendamento__year=ano_atual,
         status__in=['confirmado', 'concluido']
     ).aggregate(Sum('valor'))['valor__sum'] or 0
 
-    # Reservas de Hoje
     reservas_hoje = Reserva.objects.filter(data_agendamento__date=hoje.date()).count()
-    
-    # Pendências Gerais
     reservas_pendentes = Reserva.objects.filter(status='pendente').count()
 
-    # --- 4. DADOS PARA O GRÁFICO (Últimos 6 meses) ---
+    # 4. Dados para o Gráfico
     dados_grafico = []
     labels_grafico = []
-    
     for i in range(5, -1, -1):
         data_ref = hoje - datetime.timedelta(days=i*30)
         fat_mensal = Reserva.objects.filter(
@@ -114,7 +222,6 @@ def painel(request):
             data_agendamento__year=data_ref.year,
             status__in=['confirmado', 'concluido']
         ).aggregate(Sum('valor'))['valor__sum'] or 0
-        
         dados_grafico.append(float(fat_mensal))
         labels_grafico.append(data_ref.strftime("%B/%Y"))
 
@@ -126,11 +233,10 @@ def painel(request):
         'reservas_hoje': reservas_hoje,
         'reservas_pendentes': reservas_pendentes,
         'faturamento_mes': faturamento_mes,
-        'total_clientes': Cliente.objects.count(), # Se der erro aqui, verifique o import de Cliente
+        'total_clientes': Cliente.objects.count(),
         'labels_grafico': labels_grafico,
         'dados_grafico': dados_grafico,
     }
-    
     return render(request, 'dashboard/painel.html', context)
 
 @login_required
@@ -151,39 +257,51 @@ def gerenciar_banner(request):
     context = {'imagens': imagens, 'form': form}
     return render(request, 'dashboard/gerenciar_banner.html', context)
 
-# --- VIEWS DE GERENCIAMENTO DE RESERVAS ---
-
+# --- AQUI ESTÁ A VIEW MODIFICADA (ATENÇÃO!) ---
 @login_required
 def detalhe_reserva(request, reserva_id):
     reserva = get_object_or_404(Reserva, id=reserva_id)
     guias_disponiveis = Guia.objects.filter(ativo=True)
     
     if request.method == 'POST':
-        # Lógica de Atualizar Status
+        # --- Lógica de Atualizar Status (Botões Coloridos) ---
         if 'status' in request.POST:
             novo_status = request.POST.get('status')
             if novo_status in ['confirmado', 'concluido', 'cancelado']:
                 reserva.status = novo_status
                 reserva.save()
+                
+                # NOVO: SE CONFIRMOU, DISPARA O E-MAIL
+                if novo_status == 'confirmado':
+                    disparar_email_confirmacao(request, reserva)
+                else:
+                    messages.success(request, f"Status atualizado para {reserva.get_status_display()}!")
+                
                 return redirect('detalhe_reserva', reserva_id=reserva.id)
         
-        # Lógica de Atribuir Guia (O ERRO ESTAVA AQUI)
+        # --- Lógica de Atribuir Guia ---
         if 'guia' in request.POST:
             guia_id = request.POST.get('guia')
             if guia_id:
                 guia_selecionado = get_object_or_404(Guia, id=guia_id)
-                # CORREÇÃO: Mudamos de 'guia_atribuido' para 'guia'
                 reserva.guia = guia_selecionado 
+                reserva.save()
+                messages.success(request, f"Guia {guia_selecionado.nome} atribuído com sucesso!")
+                
+                # NOVO: SE JÁ ESTAVA CONFIRMADO, REENVIA O E-MAIL COM O GUIA
+                if reserva.status == 'confirmado':
+                    disparar_email_confirmacao(request, reserva)
             else:
-                # CORREÇÃO: Mudamos de 'guia_atribuido' para 'guia'
                 reserva.guia = None
+                reserva.save()
+                messages.info(request, "Guia removido.")
             
-            reserva.save()
             return redirect('detalhe_reserva', reserva_id=reserva.id)
 
     context = {'reserva': reserva, 'guias': guias_disponiveis}
     return render(request, 'dashboard/detalhe_reserva.html', context)
 
+# ... (MANTENHA O RESTO DAS VIEWS IGUAIS ABAIXO) ...
 @login_required
 def editar_reserva(request, reserva_id):
     reserva = get_object_or_404(Reserva, id=reserva_id)
@@ -250,8 +368,6 @@ def excluir_parceiro(request, guia_id):
 @login_required
 def gerar_recibo_pdf(request, reserva_id):
     reserva = get_object_or_404(Reserva, id=reserva_id)
-    
-    # 1. Tenta achar a imagem
     if settings.DEBUG:
         img_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo.png')
     else:
@@ -259,22 +375,19 @@ def gerar_recibo_pdf(request, reserva_id):
         if not os.path.exists(img_path):
              img_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo.png')
     
-    # 2. Converte a imagem para Base64 (Texto)
     logo_data = ""
     if os.path.exists(img_path):
         with open(img_path, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
         logo_data = f"data:image/png;base64,{encoded_string}"
     
-    # 3. Manda para o HTML
     context = {
         'reserva': reserva,
         'user': request.user,
-        'logo_data': logo_data # <--- Agora usamos 'logo_data'
+        'logo_data': logo_data
     }
     
     html_string = render_to_string('dashboard/voucher_pdf.html', context)
-    
     html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
     pdf = html.write_pdf()
     
@@ -289,17 +402,13 @@ def gerar_recibo_manual(request):
         form = ReciboManualForm(request.POST)
         if form.is_valid():
             dados_recibo = form.cleaned_data
-            
-            # --- LÓGICA DA IMAGEM TAMBÉM NO MANUAL ---
             if settings.DEBUG:
                 logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo.png')
             else:
                 logo_path = os.path.join(settings.STATIC_ROOT, 'images', 'logo.png')
                 if not os.path.exists(logo_path):
                      logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo.png')
-            # -----------------------------------------
 
-            # Adiciona a logo ao contexto
             context = {
                 'recibo': dados_recibo, 
                 'user': request.user,
@@ -307,28 +416,21 @@ def gerar_recibo_manual(request):
             }
 
             html_string = render_to_string('dashboard/recibo_manual_pdf.html', context)
-            
             html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
             pdf = html.write_pdf()
             
             response = HttpResponse(pdf, content_type='application/pdf')
-            # Tratamento seguro para o nome do arquivo (caso não tenha número)
             num_recibo = dados_recibo.get('numero_recibo') or 'avulso'
             filename = f"recibo_{num_recibo}.pdf"
-            
             response['Content-Disposition'] = f'inline; filename="{filename}"'
             return response
     else:
         form = ReciboManualForm()
-    
     return render(request, 'dashboard/gerar_recibo_manual.html', {'form': form})
 
 @login_required
 def gerar_recibo_financeiro(request, reserva_id):
-    # Pega a reserva
     reserva = get_object_or_404(Reserva, id=reserva_id)
-    
-    # Lógica da Imagem (Base64) - A mesma que usamos no voucher
     if settings.DEBUG:
         img_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo.png')
     else:
@@ -348,9 +450,7 @@ def gerar_recibo_financeiro(request, reserva_id):
         'logo_data': logo_data 
     }
     
-    # ATENÇÃO: Chama um HTML novo (recibo_pagamento.html) para não mexer no voucher
     html_string = render_to_string('dashboard/recibo_pagamento.html', context)
-    
     html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
     pdf = html.write_pdf()
     
@@ -383,7 +483,6 @@ def calendario_api(request):
 
 @login_required
 def nova_reserva_manual(request):
-    # Verifica se já temos dados de cliente pré-carregados (do passo "Salvar e Adicionar Outro")
     initial_data = {}
     if 'cliente_id' in request.GET:
         cliente_pre = get_object_or_404(Cliente, id=request.GET.get('cliente_id'))
@@ -398,8 +497,6 @@ def nova_reserva_manual(request):
         form = ReservaManualForm(request.POST)
         if form.is_valid():
             dados = form.cleaned_data
-            
-            # 1. Cria ou Atualiza o Cliente
             cliente_obj, created = Cliente.objects.update_or_create(
                 email=dados['email_cliente'],
                 defaults={
@@ -408,8 +505,6 @@ def nova_reserva_manual(request):
                     'telefone': dados['telefone_cliente'],
                 }
             )
-
-            # 2. Cria a Reserva
             nova_reserva = Reserva(
                 cliente=cliente_obj,
                 tipo=dados['tipo_servico'],
@@ -417,26 +512,21 @@ def nova_reserva_manual(request):
                 numero_passageiros=dados['numero_passageiros'],
                 valor=dados['valor'],
                 informacoes_voo=dados['informacoes_voo'],
-                status='confirmado' # Já nasce confirmada pois foi você quem fez
+                status='confirmado'
             )
-
-            # Preenche os campos específicos dependendo do tipo
             if dados['tipo_servico'] == 'passeio':
                 nova_reserva.praia_destino = dados['praia_selecionada']
-                nova_reserva.local_partida = "A combinar (Ver Obs)" # Valor padrão
+                nova_reserva.local_partida = "A combinar (Ver Obs)"
             else:
                 nova_reserva.local_partida = dados['local_partida']
                 nova_reserva.local_chegada = dados['local_chegada']
             
             nova_reserva.save()
 
-            # 3. Verifica qual botão foi clicado
             if 'salvar_adicionar' in request.POST:
-                # Redireciona para a mesma página, mas passando o ID do cliente para preencher automático
                 return redirect(f"{reverse('nova_reserva_manual')}?cliente_id={cliente_obj.id}")
             else:
                 return redirect('painel')
-
     else:
         form = ReservaManualForm(initial=initial_data)
 
@@ -450,32 +540,26 @@ def lista_praias(request):
 @login_required
 def nova_praia(request):
     if request.method == 'POST':
-        # O ERRO ESTAVA AQUI: Faltava o request.FILES
-        form = PraiaForm(request.POST, request.FILES) 
-        
+        form = PraiaForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             messages.success(request, 'Passeio cadastrado com sucesso!')
-            return redirect('lista_praias') # Verifique se o nome da sua rota é esse mesmo
+            return redirect('lista_praias')
     else:
         form = PraiaForm()
-    
     return render(request, 'dashboard/form_praia.html', {'form': form, 'titulo': 'Novo Passeio'})
 
 @login_required
 def editar_praia(request, praia_id):
     praia = get_object_or_404(Praia, id=praia_id)
     if request.method == 'POST':
-        # AQUI TAMBÉM PRECISA DO request.FILES
         form = PraiaForm(request.POST, request.FILES, instance=praia)
-        
         if form.is_valid():
             form.save()
             messages.success(request, 'Passeio atualizado!')
             return redirect('lista_praias')
     else:
         form = PraiaForm(instance=praia)
-    
     return render(request, 'dashboard/form_praia.html', {'form': form, 'titulo': 'Editar Passeio'})
 
 @login_required
@@ -484,8 +568,6 @@ def excluir_praia(request, praia_id):
     praia.delete()
     messages.success(request, 'Praia removida.')
     return redirect('lista_praias')
-
-# --- GESTÃO DE CLIENTES (Novo) ---
 
 @login_required
 def novo_cliente(request):
@@ -514,32 +596,25 @@ def editar_cliente(request, cliente_id):
 
 @login_required
 def lista_clientes(request):
-    clientes = Cliente.objects.all().order_by('-id') # Mostra os mais novos primeiro
+    clientes = Cliente.objects.all().order_by('-id')
     return render(request, 'dashboard/lista_clientes.html', {'clientes': clientes})
 
 @login_required
 def gerar_voucher(request, reserva_id):
     reserva = get_object_or_404(Reserva, id=reserva_id)
-    
     data = {
         'reserva': reserva,
         'empresa': 'JVC Turismo',
         'telefone_empresa': '(82) 99999-9999',
-        'site': request.build_absolute_uri('/')[:-1], # Pega o URL do site atual
+        'site': request.build_absolute_uri('/')[:-1],
     }
-    
-    # Renderiza o PDF
     pdf = render_to_pdf('dashboard/voucher_pdf.html', data)
-    
-    # Se quiser que faça download direto, mude para 'attachment'. 
-    # 'inline' abre no navegador.
     if pdf:
         response = HttpResponse(pdf, content_type='application/pdf')
         filename = f"Voucher_{reserva.id}_{reserva.cliente.nome}.pdf"
         content = f"inline; filename={filename}"
         response['Content-Disposition'] = content
         return response
-        
     return HttpResponse("Erro ao gerar PDF")
 
 @login_required
@@ -566,8 +641,6 @@ def excluir_depoimento(request, depoimento_id):
     messages.success(request, 'Depoimento removido.')
     return redirect('lista_depoimentos')
 
-# --- GESTÃO DE BLOG ---
-
 @login_required
 def lista_posts(request):
     posts = Post.objects.all().order_by('-data_publicacao')
@@ -579,7 +652,6 @@ def novo_post(request):
         form = PostForm(request.POST, request.FILES)
         if form.is_valid():
             post = form.save(commit=False)
-            # Gera o slug automaticamente se não existir
             if not post.slug:
                 post.slug = slugify(post.titulo)
             post.save()
@@ -608,8 +680,6 @@ def excluir_post(request, post_id):
     post.delete()
     messages.success(request, 'Postagem removida.')
     return redirect('lista_posts')
-
-# --- GESTÃO DE CARROSSEL ---
 
 @login_required
 def gerenciar_carrossel(request):
@@ -648,7 +718,6 @@ def excluir_carrossel(request, item_id):
     messages.success(request, 'Banner removido.')
     return redirect('gerenciar_carrossel')
 
-# --- GESTÃO DE TRANSFERS ---
 @login_required
 def lista_transfers(request):
     transfers = Transfer.objects.all()
@@ -657,9 +726,7 @@ def lista_transfers(request):
 @login_required
 def novo_transfer(request):
     if request.method == 'POST':
-        # ADICIONE O request.FILES AQUI:
         form = TransferForm(request.POST, request.FILES)
-        
         if form.is_valid():
             form.save()
             messages.success(request, 'Transfer criado com sucesso!')
@@ -672,9 +739,7 @@ def novo_transfer(request):
 def editar_transfer(request, transfer_id):
     transfer = get_object_or_404(Transfer, id=transfer_id)
     if request.method == 'POST':
-        # ADICIONE O request.FILES AQUI TAMBÉM:
         form = TransferForm(request.POST, request.FILES, instance=transfer)
-        
         if form.is_valid():
             form.save()
             messages.success(request, 'Transfer atualizado!')
@@ -692,23 +757,13 @@ def excluir_transfer(request, transfer_id):
 
 @login_required
 def lista_reservas(request):
-    # 1. Pega TODAS as reservas, da mais nova para a mais antiga
     reservas = Reserva.objects.all().order_by('-id')
-
-    # --- INÍCIO DA LÓGICA DE FILTROS ---
-
-    # Filtro por STATUS
     status_filtro = request.GET.get('status')
     if status_filtro:
         reservas = reservas.filter(status=status_filtro)
-
-    # Filtro por DATA
     data_filtro = request.GET.get('data')
     if data_filtro:
-        # __date filtra ignorando a hora (apenas dia/mês/ano)
         reservas = reservas.filter(data_agendamento__date=data_filtro)
-
-    # Filtro de BUSCA (Nome, Email ou ID da reserva)
     busca = request.GET.get('busca')
     if busca:
         reservas = reservas.filter(
@@ -716,15 +771,10 @@ def lista_reservas(request):
             Q(cliente__email__icontains=busca) |
             Q(id__icontains=busca)
         )
-
-    # --- FIM DA LÓGICA ---
-
     context = {
         'reservas': reservas,
-        # Passamos os filtros de volta para o HTML para manter os campos preenchidos
         'status_filtro': status_filtro,
         'data_filtro': data_filtro,
         'busca': busca
     }
-    
     return render(request, 'dashboard/lista_reservas.html', context)
