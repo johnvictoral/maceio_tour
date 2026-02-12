@@ -1,5 +1,6 @@
 from django import forms
 from .models import Cliente, Reserva,Transfer
+from .models import Reserva, Bloqueio # <--- Não esqueça de importar o Bloqueio aqui
 
 class ClientePublicoForm(forms.ModelForm):
     class Meta:
@@ -22,6 +23,20 @@ class ReservaPublicaForm(forms.ModelForm):
             'local_partida': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Qual hotel você estará?'}),
             'informacoes_voo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Opcional: Nº do Voo / Horário'}),
         }
+
+    # --- VALIDAÇÃO DE BLOQUEIO DE AGENDA ---
+    def clean_data_agendamento(self):
+        data_escolhida = self.cleaned_data.get('data_agendamento')
+
+        if data_escolhida:
+            # Verifica se existe BLOQUEIO GERAL (praia__isnull=True) para esta data
+            # Como o input é type='date', o Python já entende como uma data (dia/mês/ano)
+            
+            # Se encontrar um bloqueio geral para esse dia, trava o formulário
+            if Bloqueio.objects.filter(data=data_escolhida, praia__isnull=True).exists():
+                raise forms.ValidationError("Desculpe, nossa agenda está lotada ou indisponível para esta data. Por favor, escolha outro dia.")
+
+        return data_escolhida
 
 class TransferForm(forms.ModelForm):
     class Meta:

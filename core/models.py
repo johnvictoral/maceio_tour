@@ -202,3 +202,18 @@ class Reserva(models.Model):
     def __str__(self):
         # Agora mostramos o Código no painel admin também
         return f"Reserva #{self.codigo} - {self.cliente}"
+
+class Bloqueio(models.Model):
+    data = models.DateField("Data Bloqueada")
+    # Se deixar vazio, bloqueia TUDO (Dia Off). Se preencher, bloqueia só esse passeio.
+    praia = models.ForeignKey('Praia', on_delete=models.CASCADE, null=True, blank=True, verbose_name="Passeio Específico")
+    motivo = models.CharField(max_length=100, default="Vagas Esgotadas")
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        tipo = self.praia.nome if self.praia else "GERAL"
+        return f"{self.data} - {tipo}"
+
+    class Meta:
+        ordering = ['-data'] # Mostra os bloqueios futuros primeiro
+        unique_together = ['data', 'praia'] # Não deixa bloquear a mesma coisa 2x

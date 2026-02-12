@@ -64,4 +64,7 @@ path('depoimentos/excluir/<int:depoimento_id>/', views.excluir_depoimento, name=
     path('reservas/recibo/<int:reserva_id>/', views.gerar_recibo_pdf, name='gerar_recibo_pdf'),
     # Rota para o Recibo Financeiro (Separado do Voucher)
 path('financeiro/comprovante/<int:reserva_id>/', views.gerar_recibo_financeiro, name='gerar_recibo_financeiro'),
+
+path('bloqueios/', views.gerenciar_bloqueios, name='gerenciar_bloqueios'),
+path('bloqueios/excluir/<int:bloqueio_id>/', views.excluir_bloqueio, name='excluir_bloqueio'),
 ]

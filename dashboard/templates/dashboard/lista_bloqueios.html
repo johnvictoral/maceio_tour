@@ -1,0 +1,85 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>📅 Bloqueio de Agenda</h2>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-slash-circle"></i> Bloquear Nova Data</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label>Selecione a Data:</label>
+                        {{ form.data }}
+                    </div>
+                    <div class="mb-3">
+                        <label>Tipo de Bloqueio:</label>
+                        {{ form.praia }}
+                        <div class="form-text">Deixe em "BLOQUEIO GERAL" para fechar o dia todo.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label>Motivo (Aparece pra você):</label>
+                        {{ form.motivo }}
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100">Bloquear Data</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Dias Bloqueados (Futuros)</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Data</th>
+                                <th>O que está fechado?</th>
+                                <th>Motivo</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in bloqueios %}
+                            <tr>
+                                <td><strong>{{ b.data|date:"d/m/Y" }}</strong></td>
+                                <td>
+                                    {% if b.praia %}
+                                        <span class="badge bg-warning text-dark">Apenas {{ b.praia.nome }}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">⛔ DIA TODO (GERAL)</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ b.motivo }}</td>
+                                <td>
+                                    <form method="POST" action="{% url 'excluir_bloqueio' b.id %}" onsubmit="return confirm('Tem certeza que quer liberar esta data?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Desbloquear">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    Nenhum bloqueio ativo. Agenda livre! ✅
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

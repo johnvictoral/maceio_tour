@@ -4,6 +4,7 @@ from django import forms
 from core.models import ImagemCarrossel,Guia,Praia, Transfer, Cliente
 from core.models import Reserva, Cliente
 from core.models import Depoimento,Post,ImagemCarrossel
+from core.models import Bloqueio
 
 class ImagemCarrosselForm(forms.ModelForm):
     class Meta:
@@ -213,3 +214,18 @@ class TransferForm(forms.ModelForm):
             'direcao': forms.Select(attrs={'class': 'form-select'}),
             'mais_vendido': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+class BloqueioForm(forms.ModelForm):
+    class Meta:
+        model = Bloqueio
+        fields = ['data', 'praia', 'motivo']
+        widgets = {
+            'data': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'praia': forms.Select(attrs={'class': 'form-select'}),
+            'motivo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Lotado, Feriado...'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Deixa o campo praia opcional visualmente ("--- Bloqueio Geral ---")
+        self.fields['praia'].empty_label = "--- BLOQUEIO GERAL (TODOS OS PASSEIOS) ---"

@@ -16,6 +16,8 @@ from django.contrib.auth.views import LoginView
 from django.utils.text import slugify
 from django.utils.html import strip_tags # <--- IMPORTANTE PARA EMAIL
 from django.core.mail import EmailMultiAlternatives # <--- IMPORTANTE PARA ANEXO
+from core.models import Bloqueio # <--- Não esqueça de importar
+from .forms import BloqueioForm # <--- E o formulário
 
 from weasyprint import HTML
 
@@ -763,3 +765,34 @@ def lista_reservas(request):
         'busca': busca
     }
     return render(request, 'dashboard/lista_reservas.html', context)
+
+@login_required
+def gerenciar_bloqueios(request):
+    # Lógica de Adicionar
+    if request.method == 'POST':
+        form = BloqueioForm(request.POST)
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, 'Data bloqueada com sucesso!')
+                return redirect('gerenciar_bloqueios')
+            except Exception:
+                messages.error(request, 'Essa data já está bloqueada para este item.')
+    else:
+        form = BloqueioForm()
+
+    # Lógica de Listar (Só mostra de hoje para frente para não poluir)
+    hoje = timezone.now().date()
+    bloqueios = Bloqueio.objects.filter(data__gte=hoje).order_by('data')
+    
+    return render(request, 'dashboard/lista_bloqueios.html', {
+        'bloqueios': bloqueios, 
+        'form': form
+    })
+
+@login_required
+def excluir_bloqueio(request, bloqueio_id):
+    bloqueio = get_object_or_404(Bloqueio, id=bloqueio_id)
+    bloqueio.delete()
+    messages.success(request, 'Data desbloqueada (liberada)!')
+    return redirect('gerenciar_bloqueios')
