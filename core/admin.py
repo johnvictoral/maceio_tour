@@ -11,8 +11,8 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 
-# Importando seus modelos (adicionei Post e Depoimento caso queira usar)
-from .models import Praia, ImagemCarrossel, Guia, Transfer, Cliente, Reserva, Post, Depoimento
+# Importando seus modelos (Adicionei Bloqueio aqui)
+from .models import Praia, ImagemCarrossel, Guia, Transfer, Cliente, Reserva, Post, Depoimento, Bloqueio
 
 # =======================================================
 # 1. FUNÇÃO QUE DESENHA O VOUCHER PDF
@@ -23,7 +23,7 @@ def gerar_voucher_pdf(reserva):
     width, height = A4
     
     # --- CABEÇALHO ---
-    p.setFillColor(colors.darkgreen) # Cor da marca
+    p.setFillColor(colors.darkgreen)
     p.setFont("Helvetica-Bold", 24)
     p.drawString(50, 800, "VÁ COM JOHN TURISMO")
     
@@ -32,7 +32,7 @@ def gerar_voucher_pdf(reserva):
     p.drawString(50, 780, "Maceió - Alagoas | CNPJ: JVC Turismo")
     p.drawString(50, 765, "WhatsApp: (82) 99932-5548")
     
-    p.line(50, 750, 550, 750) # Linha horizontal
+    p.line(50, 750, 550, 750) 
     
     # --- TÍTULO DO DOCUMENTO ---
     p.setFont("Helvetica-Bold", 18)
@@ -57,7 +57,6 @@ def gerar_voucher_pdf(reserva):
     y -= 25
     p.setFont("Helvetica", 12)
     
-    # Descobre o nome do serviço
     servico = "Serviço Personalizado"
     if reserva.praia_destino:
         servico = f"Passeio: {reserva.praia_destino.nome}"
@@ -79,11 +78,10 @@ def gerar_voucher_pdf(reserva):
     # --- DADOS DO GUIA/MOTORISTA (SE TIVER) ---
     if reserva.guia:
         y -= 50
-        # Desenha um retângulo azul claro de fundo
         p.setFillColor(colors.aliceblue)
         p.rect(40, y-80, 515, 95, fill=1, stroke=0)
         
-        p.setFillColor(colors.darkblue) # Texto azul escuro
+        p.setFillColor(colors.darkblue)
         p.setFont("Helvetica-Bold", 14)
         p.drawString(50, y, "SEU MOTORISTA / GUIA")
         y -= 25
@@ -96,14 +94,13 @@ def gerar_voucher_pdf(reserva):
         y -= 20
         p.drawString(50, y, f"Telefone: {reserva.guia.telefone}")
         
-        p.setFillColor(colors.black) # Volta pra preto
+        p.setFillColor(colors.black)
 
     # --- RODAPÉ ---
     p.setFont("Helvetica-Oblique", 10)
     p.drawCentredString(width/2, 100, "Apresente este voucher ao motorista no momento do embarque.")
     p.drawCentredString(width/2, 85, "Obrigado por escolher a Vá com John Turismo!")
     
-    # Fecha e salva o PDF na memória
     p.showPage()
     p.save()
     
@@ -116,43 +113,22 @@ def gerar_voucher_pdf(reserva):
 
 @admin.register(Reserva)
 class ReservaAdmin(admin.ModelAdmin):
-    list_display = ('codigo', 'cliente', 'tipo', 'status_colorido', 'data_agendamento', 'valor', 'guia')
+    # CORREÇÃO: 'status' precisa estar aqui para o list_editable funcionar
+    list_display = ('codigo', 'cliente', 'tipo', 'status', 'data_agendamento', 'valor', 'guia')
     list_filter = ('status', 'tipo', 'data_agendamento')
     search_fields = ('cliente__nome', 'cliente__email', 'codigo')
-    list_editable = ('status', 'guia') # Permite editar direto na lista!
-    readonly_fields = ('codigo',) # Código não pode ser alterado manualmente
-    
-    # Função para colorir o status na lista (Visual bonito)
-    def status_colorido(self, obj):
-        from django.utils.html import format_html
-        cores = {
-            'pendente': 'orange',
-            'confirmado': 'green',
-            'concluido': 'blue',
-            'cancelado': 'red',
-        }
-        return format_html(
-            '<span style="color: {}; font-weight: bold;">{}</span>',
-            cores.get(obj.status, 'black'),
-            obj.get_status_display()
-        )
-    status_colorido.short_description = 'Status'
+    list_editable = ('status', 'guia') 
+    readonly_fields = ('codigo',)
 
-    # --- AQUI ACONTECE A MÁGICA DO E-MAIL + PDF ---
     def save_model(self, request, obj, form, change):
-        # Verifica se é uma edição (não criação nova)
         if change:
-            # Lógica: Se mudou pra Confirmado OU se alterou o Guia numa reserva já confirmada
             virou_confirmado = 'status' in form.changed_data and obj.status == 'confirmado'
             mudou_guia = 'guia' in form.changed_data and obj.status == 'confirmado'
             
             if virou_confirmado or mudou_guia:
-                print(f"--- GERANDO VOUCHER E ENVIANDO E-MAIL PARA {obj.cliente.email} ---")
                 try:
-                    # 1. Prepara o conteúdo do e-mail
                     servico_nome = obj.praia_destino.nome if obj.praia_destino else (obj.local_chegada or "Transfer")
                     
-                    # Tenta renderizar o HTML bonito, se não der, vai texto simples
                     try:
                         html_content = render_to_string('core/emails/reserva_confirmada.html', {
                             'nome_cliente': obj.cliente.nome,
@@ -165,12 +141,9 @@ class ReservaAdmin(admin.ModelAdmin):
                         html_content = f"<p>Sua reserva <b>#{obj.codigo}</b> foi confirmada!</p>"
                     
                     text_content = strip_tags(html_content)
-                    
-                    # 2. Gera o PDF do Voucher
                     pdf_buffer = gerar_voucher_pdf(obj)
                     filename = f"Voucher_{obj.codigo}.pdf"
 
-                    # 3. Cria o e-mail com anexo
                     email = EmailMultiAlternatives(
                         subject=f'Reserva CONFIRMADA + Voucher #{obj.codigo}',
                         body=text_content,
@@ -178,20 +151,26 @@ class ReservaAdmin(admin.ModelAdmin):
                         to=[obj.cliente.email]
                     )
                     email.attach_alternative(html_content, "text/html")
-                    
-                    # ANEXA O PDF AQUI
                     email.attach(filename, pdf_buffer.getvalue(), 'application/pdf')
-                    
-                    # Envia
                     email.send()
                     
                     self.message_user(request, f"✅ E-mail enviado com Voucher PDF para {obj.cliente.nome}!", level='SUCCESS')
                 except Exception as e:
                     self.message_user(request, f"⚠️ Reserva salva, mas erro no envio do e-mail: {e}", level='WARNING')
-                    print(f"ERRO PDF/EMAIL: {e}")
 
-        # Salva no banco de dados
         super().save_model(request, obj, form, change)
+
+# --- ADICIONEI O ADMIN DO BLOQUEIO AQUI ---
+@admin.register(Bloqueio)
+class BloqueioAdmin(admin.ModelAdmin):
+    list_display = ('data', 'tipo_bloqueio', 'motivo')
+    list_filter = ('data', 'praia')
+    date_hierarchy = 'data'
+    
+    def tipo_bloqueio(self, obj):
+        if obj.praia:
+            return f"🚫 Apenas: {obj.praia.nome}"
+        return "⛔ BLOQUEIO TOTAL (Site Inteiro)"
 
 @admin.register(Cliente)
 class ClienteAdmin(admin.ModelAdmin):
