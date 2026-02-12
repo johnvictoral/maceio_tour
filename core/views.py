@@ -3,6 +3,9 @@ import os
 import io # <--- Importante para o PDF
 from datetime import datetime
 
+from django.core.serializers.json import DjangoJSONEncoder
+from core.models import Bloqueio # Importe o Bloqueio
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.conf import settings
@@ -331,6 +334,17 @@ def fazer_reserva_passeio(request, praia_id):
     praia = get_object_or_404(Praia, id=praia_id)
     sugestoes = Praia.objects.filter(ativo=True).exclude(id=praia.id)[:3]
 
+    # --- LÓGICA NOVA: PEGAR DATAS BLOQUEADAS ---
+    # Pegamos bloqueios gerais (dia todo) OU bloqueios específicos dessa praia
+    bloqueios = Bloqueio.objects.filter(
+        Q(praia__isnull=True) | Q(praia=praia)
+    ).values_list('data', flat=True)
+    
+    # Transforma em uma lista de textos ["2026-02-12", "2026-02-15"] para o Javascript ler
+    datas_bloqueadas = [b.strftime("%Y-%m-%d") for b in bloqueios]
+    datas_bloqueadas_json = json.dumps(datas_bloqueadas)
+    # --------------------------------------------
+
     if request.method == 'POST':
         cliente_form = ClientePublicoForm(request.POST)
         reserva_form = ReservaPublicaForm(request.POST)
@@ -345,15 +359,12 @@ def fazer_reserva_passeio(request, praia_id):
             reserva.valor = praia.valor if praia.valor else 0.00
             reserva.save()
             
-            sucesso_email = enviar_email_reserva(reserva, praia.nome)
-            
-            if sucesso_email:
-                messages.success(request, f"Reserva confirmada! O voucher foi enviado para {cliente.email}.")
-            else:
-                messages.warning(request, f"Reserva feita, mas houve um erro ao enviar o e-mail. Entre em contato conosco.")
-
+            enviar_email_reserva(reserva, praia.nome)
+            messages.success(request, f"Solicitação enviada! Verifique seu e-mail.")
             return redirect('reserva_confirmada')
-            
+        else:
+            # Se deu erro (ex: data bloqueada), avisamos aqui
+            messages.error(request, "Por favor, corrija os erros no formulário abaixo.")
     else:
         cliente_form = ClientePublicoForm()
         reserva_form = ReservaPublicaForm()
@@ -362,7 +373,8 @@ def fazer_reserva_passeio(request, praia_id):
         'praia': praia,
         'cliente_form': cliente_form,
         'reserva_form': reserva_form,
-        'sugestoes': sugestoes
+        'sugestoes': sugestoes,
+        'datas_bloqueadas': datas_bloqueadas_json, # <--- Enviamos para o HTML
     })
 
 def fazer_reserva_transfer(request, transfer_id):

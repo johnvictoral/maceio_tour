@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/themes/material_green.css">
 
 <style>
     /* Estilos da Sidebar (iguais ao blog) */
@@ -27,6 +31,11 @@
         padding-bottom: 0.5rem;
         border-bottom: 1px solid #eee;
     }
+    
+    /* Ajuste para o campo de data ficar bonito */
+    .flatpickr-input {
+        background-color: #fff !important;
+    }
 </style>
 
 <div class="bg-light py-5">
@@ -41,6 +50,34 @@
     <div class="row">
         
         <div class="col-lg-8">
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm mb-4" role="alert">
+                        {% if message.tags == 'error' %}
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {% else %}
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                        {% endif %}
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if reserva_form.errors or cliente_form.errors %}
+                <div class="alert alert-danger shadow-sm mb-4">
+                    <h5 class="alert-heading"><i class="bi bi-x-circle"></i> Atenção:</h5>
+                    <ul class="mb-0 ps-3">
+                        {% for field in reserva_form %}
+                            {% for error in field.errors %}<li>{{ field.label }}: {{ error }}</li>{% endfor %}
+                        {% endfor %}
+                        {% for error in reserva_form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
             
             <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
                 {% if praia.imagem %}
@@ -90,6 +127,9 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold small text-muted">Data do Passeio</label>
                                     {{ reserva_form.data_agendamento }}
+                                    <div class="form-text text-danger" style="font-size: 0.8em;">
+                                        * Datas em cinza estão indisponíveis.
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold small text-muted">Quantas Pessoas?</label>
@@ -171,5 +211,26 @@
 
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Pega a lista de datas bloqueadas que o Django mandou
+        // O |default:"[]" evita erro se a variável estiver vazia
+        var datasBloqueadas = {{ datas_bloqueadas|default:"[]"|safe }};
+
+        flatpickr("#id_data_agendamento", {
+            "locale": "pt",           // Português
+            minDate: "today",         // Bloqueia passado
+            dateFormat: "Y-m-d",      // Formato para o Django salvar
+            altInput: true,           // Mostra formato bonito pro usuário
+            altFormat: "d/m/Y",       // Formato visual (Dia/Mês/Ano)
+            disable: datasBloqueadas, // A MÁGICA: Bloqueia a lista
+            disableMobile: "true"     // Força usar o calendário customizado no celular também
+        });
+    });
+</script>
 
 {% endblock %}
