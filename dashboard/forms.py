@@ -5,6 +5,7 @@ from core.models import ImagemCarrossel,Guia,Praia, Transfer, Cliente
 from core.models import Reserva, Cliente
 from core.models import Depoimento,Post,ImagemCarrossel
 from core.models import Bloqueio
+from ckeditor.widgets import CKEditorWidget
 
 class ImagemCarrosselForm(forms.ModelForm):
     class Meta:
@@ -139,7 +140,7 @@ class PraiaForm(forms.ModelForm):
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
             'descricao_curta': forms.TextInput(attrs={'class': 'form-control'}),
             # CORREÇÃO AQUI TAMBÉM NO WIDGET:
-            'descricao_longa': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'descricao_longa': CKEditorWidget(),
             'imagem': forms.FileInput(attrs={'class': 'form-control'}),
             'valor': forms.NumberInput(attrs={'class': 'form-control'}),
             'ativo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),

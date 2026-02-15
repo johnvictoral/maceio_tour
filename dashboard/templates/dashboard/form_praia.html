@@ -10,23 +10,25 @@
             <div class="card-body p-4">
                 <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
+                    
+                    {{ form.media }}
 
                     {% if form.errors %}
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <strong>Ops! Corrija os erros abaixo:</strong>
-        <ul>
-        {% for field in form %}
-            {% for error in field.errors %}
-                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
-            {% endfor %}
-        {% endfor %}
-        {% for error in form.non_field_errors %}
-            <li>{{ error }}</li>
-        {% endfor %}
-        </ul>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-{% endif %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Ops! Corrija os erros abaixo:</strong>
+                        <ul>
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
                     
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nome da Praia</label>
