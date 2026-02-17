@@ -19,4 +19,11 @@ urlpatterns = [
 
     # --- NOVA ROTA: MINHA RESERVA ---
     path('minha-reserva/', views.consultar_reserva, name='consultar_reserva'),
+
+    # --- ÁREA DO PARCEIRO ---
+    path('parceiro/cadastro/', views.cadastro_parceiro, name='cadastro_parceiro'),
+    path('parceiro/login/', views.login_parceiro, name='login_parceiro'),
+    path('parceiro/painel/', views.painel_parceiro, name='painel_parceiro'),
+    path('parceiro/nova-reserva/', views.nova_reserva_parceiro, name='nova_reserva_parceiro'),
+    path('parceiro/sair/', views.logout_parceiro, name='logout_parceiro'),
 ]

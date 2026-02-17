@@ -18,6 +18,10 @@ from django.utils.html import strip_tags
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
+from .forms import CadastroParceiroForm # Importe o form que criamos
 
 # Adicionei 'Guia' nas importações
 from .models import ImagemCarrossel, Praia, Transfer, Depoimento, Post, Reserva, Guia
@@ -439,3 +443,76 @@ def consultar_reserva(request):
             erro = "Preencha todos os campos."
 
     return render(request, 'core/minha_reserva.html', {'reserva': reserva, 'erro': erro})
+
+def cadastro_parceiro(request):
+    if request.method == 'POST':
+        form = CadastroParceiroForm(request.POST)
+        if form.is_valid():
+            # 1. Pega os dados
+            nome = form.cleaned_data['nome_completo']
+            email = form.cleaned_data['email']
+            senha = form.cleaned_data['senha']
+            telefone = form.cleaned_data['telefone']
+            pix = form.cleaned_data['chave_pix']
+
+            # 2. Cria o Usuário (INATIVO até confirmar email - ou ATIVO direto se preferir agilizar)
+            # Vamos criar ATIVO direto pra simplificar o teste hoje, depois colocamos a confirmação de email?
+            # Ou quer fazer com confirmação agora mesmo?
+            # Vou fazer ATIVO direto pra você ver funcionando já, ok?
+            
+            user = User.objects.create_user(username=email, email=email, password=senha)
+            user.first_name = nome
+            user.save()
+
+            # 3. Atualiza o perfil de Parceiro (que é criado automaticamente pelo Signal)
+            parceiro = user.parceiro
+            parceiro.telefone = telefone
+            parceiro.chave_pix = pix
+            parceiro.save()
+
+            # 4. Manda pro Login com mensagem de sucesso
+            messages.success(request, "Cadastro realizado! Faça login para começar a vender.")
+            return redirect('login_parceiro')
+    else:
+        form = CadastroParceiroForm()
+
+    return render(request, 'core/parceiro_cadastro.html', {'form': form})
+
+def login_parceiro(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        senha = request.POST.get('senha')
+        user = authenticate(request, username=email, password=senha)
+        if user is not None:
+            login(request, user)
+            return redirect('painel_parceiro')
+        else:
+            messages.error(request, "Email ou senha inválidos.")
+    
+    return render(request, 'core/parceiro_login.html')
+
+@login_required(login_url='login_parceiro')
+def painel_parceiro(request):
+    # Garante que é um parceiro
+    if not hasattr(request.user, 'parceiro'):
+        return redirect('home')
+        
+    parceiro = request.user.parceiro
+    reservas = parceiro.reservas.all().order_by('-data_agendamento')
+    
+    # Cálculo simples de comissão a receber
+    total_a_receber = sum(r.valor_comissao for r in reservas if r.status_pagamento_comissao == 'pendente')
+    
+    context = {
+        'parceiro': parceiro,
+        'reservas': reservas,
+        'total_a_receber': total_a_receber
+    }
+    return render(request, 'core/painel_parceiro.html', context)
+
+def logout_parceiro(request):
+    logout(request)
+    return redirect('login_parceiro')
+
+def nova_reserva_parceiro(request):
+    return HttpResponse("Em breve: Formulário de Venda")

@@ -1,6 +1,7 @@
 from django import forms
 from .models import Cliente, Reserva,Transfer
-from .models import Reserva, Bloqueio # <--- Não esqueça de importar o Bloqueio aqui
+from .models import Reserva, Bloqueio
+from .models import Parceiro, Reserva, Cliente
 
 class ClientePublicoForm(forms.ModelForm):
     class Meta:
@@ -51,3 +52,25 @@ class TransferForm(forms.ModelForm):
             'direcao': forms.Select(attrs={'class': 'form-select'}),
         }
 
+# --- FORMULÁRIO DE CADASTRO DE PARCEIRO ---
+class CadastroParceiroForm(forms.Form):
+    nome_completo = forms.CharField(label="Nome Completo", max_length=100, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Seu nome ou nome da empresa'}))
+    email = forms.EmailField(label="E-mail", widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Para receber confirmação'}))
+    telefone = forms.CharField(label="WhatsApp / Telefone", max_length=20, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(82) 99999-9999'}))
+    chave_pix = forms.CharField(label="Sua Chave Pix", required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'CPF, Email ou Aleatória (Para receber comissões)'}))
+    senha = forms.CharField(label="Crie uma Senha", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    confirmar_senha = forms.CharField(label="Confirme a Senha", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Este e-mail já está cadastrado.")
+        return email
+
+    def clean(self):
+        cleaned_data = super().clean()
+        senha = cleaned_data.get("senha")
+        confirmar_senha = cleaned_data.get("confirmar_senha")
+
+        if senha and confirmar_senha and senha != confirmar_senha:
+            self.add_error('confirmar_senha', "As senhas não conferem.")
