@@ -3,6 +3,7 @@ import os
 import io # <--- Importante para o PDF
 from datetime import datetime
 from django.db.models import Q
+from django.http import HttpResponse  # <--- ADICIONE ISSO
 
 from django.core.serializers.json import DjangoJSONEncoder
 from core.models import Bloqueio # Importe o Bloqueio
