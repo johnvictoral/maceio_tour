@@ -1,11 +1,35 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
-import random   # <--- NOVO
-import string   # <--- NOVO
+import random
+import string
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from ckeditor.fields import RichTextField  # Importante para o Editor de Texto
 
 # =========================================
-# 1. NOVO MODELO: CLIENTE
+# 0. FUNÇÕES AUXILIARES
+# =========================================
+def gerar_codigo_reserva():
+    # Gera 6 caracteres (Letras Maiúsculas e Números) ex: A4X9B2
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+# =========================================
+# 1. MODELO: PARCEIRO (NOVO)
+# =========================================
+class Parceiro(models.Model):
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='parceiro')
+    telefone = models.CharField(max_length=20)
+    chave_pix = models.CharField(max_length=100, blank=True, null=True, help_text="Chave Pix para receber comissões")
+    comissao_padrao = models.DecimalField(max_digits=5, decimal_places=2, default=10.00, help_text="Porcentagem padrão (%)")
+    ativo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.usuario.first_name} ({self.usuario.email})"
+
+# =========================================
+# 2. MODELOS BÁSICOS (CLIENTE, GUIA, ETC)
 # =========================================
 class Cliente(models.Model):
     nome = models.CharField(max_length=100)
@@ -17,44 +41,6 @@ class Cliente(models.Model):
     def __str__(self):
         return f"{self.nome} {self.sobrenome}"
 
-# =========================================
-# 2. SEUS MODELOS EXISTENTES
-# =========================================
-
-class Praia(models.Model):
-    nome = models.CharField(max_length=100)
-    descricao_curta = models.CharField(max_length=255)
-    descricao_longa = models.TextField() 
-    imagem = models.ImageField(upload_to='praias/')
-    slug = models.SlugField(unique=True, help_text="URL amigável, ex: praia-do-gunga")
-    valor = models.DecimalField(max_digits=7, decimal_places=2, help_text="Valor do passeio por pessoa", default=0.00)
-    ativo = models.BooleanField(default=True)
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            # Transforma "City Tour Maceió" em "city-tour-maceio"
-            self.slug = slugify(self.nome) 
-        super().save(*args, **kwargs)
-    def __str__(self):
-        return self.nome
-
-class ImagemCarrossel(models.Model):
-    imagem = models.ImageField(upload_to='carrossel/')
-    
-    # ADICIONE ESTES CAMPOS QUE ESTÃO FALTANDO:
-    titulo = models.CharField(max_length=100, blank=True, null=True)
-    legenda = models.CharField(max_length=200, blank=True, null=True)
-    ativo = models.BooleanField(default=True)
-    
-    # E ESTES SÃO OS LINKS QUE ADICIONAMOS HOJE:
-    praia_link = models.ForeignKey('Praia', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Ligar a um Passeio")
-    transfer_link = models.ForeignKey('Transfer', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Ligar a um Transfer")
-    
-    data_upload = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.titulo or "Imagem Carrossel"
-    
 class Guia(models.Model):
     nome = models.CharField(max_length=150)
     telefone = models.CharField(max_length=20, blank=True)
@@ -65,7 +51,23 @@ class Guia(models.Model):
 
     def __str__(self):
         return self.nome
-    
+
+class Praia(models.Model):
+    nome = models.CharField(max_length=100)
+    descricao_curta = models.CharField(max_length=255)
+    descricao_longa = RichTextField("Descrição Completa", blank=True, null=True) # CKEditor
+    imagem = models.ImageField(upload_to='praias/')
+    slug = models.SlugField(unique=True, help_text="URL amigável, ex: praia-do-gunga")
+    valor = models.DecimalField(max_digits=7, decimal_places=2, help_text="Valor do passeio por pessoa", default=0.00)
+    ativo = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.nome) 
+        super().save(*args, **kwargs)
+    def __str__(self):
+        return self.nome
+
 class Transfer(models.Model):
     DIRECAO_CHOICES = (
         ('ida', 'Ida (Aeroporto -> Maceió)'),
@@ -73,61 +75,36 @@ class Transfer(models.Model):
         ('ida_e_volta', 'Ida e Volta'),
         ('outros', 'Outros'),
     )
-
     titulo = models.CharField(max_length=200)
-    slug = models.SlugField(max_length=200, unique=True, help_text="URL amigável gerada a partir do título.")
-    origem = models.CharField(max_length=100, help_text="Ex: Aeroporto de Maceió (MCZ)")
-    destino = models.CharField(max_length=100, help_text="Ex: Hotéis na Orla (Pajuçara)")
+    slug = models.SlugField(max_length=200, unique=True)
+    origem = models.CharField(max_length=100)
+    destino = models.CharField(max_length=100)
     descricao = models.CharField(max_length=255)
-    descricao_longa = models.TextField(blank=True, null=True)
+    descricao_longa = RichTextField(blank=True, null=True) # Pode usar CKEditor aqui também se quiser
     imagem = models.ImageField(upload_to='transfers/')
     valor = models.DecimalField(max_digits=8, decimal_places=2)
-    mais_vendido = models.BooleanField(default=False, help_text="Marque esta opção para destacar este transfer como 'Mais Vendido'.")
+    mais_vendido = models.BooleanField(default=False)
     direcao = models.CharField(max_length=15, choices=DIRECAO_CHOICES, default='outros')
 
     def save(self, *args, **kwargs):
-        # Se não tiver slug (link), cria um baseado no título
         if not self.slug:
             self.slug = slugify(self.titulo)
         super().save(*args, **kwargs)
     def __str__(self):
         return self.titulo
 
-# =========================================
-# 3. NOVO MODELO: RESERVA
-# =========================================
-class Reserva(models.Model):
-    TIPO_CHOICES = (
-        ('passeio', 'Passeio'),
-        ('transfer', 'Transfer'),
-    )
-    STATUS_CHOICES = (
-        ('pendente', 'Pendente'),
-        ('confirmado', 'Confirmado'),
-        ('concluido', 'Concluído'),
-        ('cancelado', 'Cancelado'),
-    )
-
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='reservas')
-    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
-    
-    praia_destino = models.ForeignKey(Praia, on_delete=models.SET_NULL, null=True, blank=True)
-    
-    guia = models.ForeignKey(Guia, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Guia Responsável")
-    # Campo para salvar o nome do transfer ou local
-    local_partida = models.CharField(max_length=200, blank=True, null=True)
-    local_chegada = models.CharField(max_length=200, blank=True, null=True)
-    
-    data_agendamento = models.DateTimeField()
-    numero_passageiros = models.IntegerField()
-    valor = models.DecimalField(max_digits=10, decimal_places=2)
-    informacoes_voo = models.TextField(blank=True, null=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pendente')
-    criado_em = models.DateTimeField(auto_now_add=True)
+class ImagemCarrossel(models.Model):
+    imagem = models.ImageField(upload_to='carrossel/')
+    titulo = models.CharField(max_length=100, blank=True, null=True)
+    legenda = models.CharField(max_length=200, blank=True, null=True)
+    ativo = models.BooleanField(default=True)
+    praia_link = models.ForeignKey('Praia', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Ligar a um Passeio")
+    transfer_link = models.ForeignKey('Transfer', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Ligar a um Transfer")
+    data_upload = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Reserva #{self.id} - {self.cliente}"
-    
+        return self.titulo or "Imagem Carrossel"
+
 class Depoimento(models.Model):
     nome = models.CharField(max_length=100)
     cidade = models.CharField(max_length=100, help_text="Ex: São Paulo - SP")
@@ -138,7 +115,7 @@ class Depoimento(models.Model):
 
     def __str__(self):
         return self.nome
-    
+
 class Post(models.Model):
     STATUS_CHOICES = (
         ('rascunho', 'Rascunho'),
@@ -146,7 +123,7 @@ class Post(models.Model):
     )
     titulo = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True, null=True)
-    conteudo = models.TextField()
+    conteudo = RichTextField() # CKEditor no Blog é essencial
     imagem_destaque = models.ImageField(upload_to='blog/')
     data_publicacao = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='rascunho')
@@ -155,21 +132,27 @@ class Post(models.Model):
         if not self.slug:
             self.slug = slugify(self.titulo)
         super().save(*args, **kwargs)
-
     def __str__(self):
         return self.titulo
-    
-def gerar_codigo_reserva():
-    # Gera 6 caracteres (Letras Maiúsculas e Números)
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
-# ... (Mantenha Cliente, Praia, ImagemCarrossel, Guia, Transfer iguais) ...
+class Bloqueio(models.Model):
+    data = models.DateField("Data Bloqueada")
+    praia = models.ForeignKey(Praia, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Passeio Específico")
+    motivo = models.CharField(max_length=100, default="Vagas Esgotadas")
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        tipo = self.praia.nome if self.praia else "GERAL"
+        return f"{self.data} - {tipo}"
+
+    class Meta:
+        ordering = ['-data']
+        unique_together = ['data', 'praia']
 
 # =========================================
-# 3. MODELO: RESERVA (ATUALIZADO)
+# 3. MODELO PRINCIPAL: RESERVA (UNIFICADO)
 # =========================================
 class Reserva(models.Model):
-    # ... seus choices ...
     TIPO_CHOICES = (
         ('passeio', 'Passeio'),
         ('transfer', 'Transfer'),
@@ -180,16 +163,17 @@ class Reserva(models.Model):
         ('concluido', 'Concluído'),
         ('cancelado', 'Cancelado'),
     )
-
-    # --- CAMPO NOVO: CÓDIGO ---
-    # unique=True garante que nunca haverá dois iguais
+    
+    # 1. Código da Reserva (Gerado Automaticamente)
     codigo = models.CharField(max_length=10, default=gerar_codigo_reserva, unique=True, editable=False)
     
-    # ... seus campos existentes ...
+    # 2. Dados Básicos
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='reservas')
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
-    guia = models.ForeignKey(Guia, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Guia Responsável")
     praia_destino = models.ForeignKey(Praia, on_delete=models.SET_NULL, null=True, blank=True)
+    guia = models.ForeignKey(Guia, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Guia Responsável")
+    
+    # 3. Detalhes
     local_partida = models.CharField(max_length=200, blank=True, null=True)
     local_chegada = models.CharField(max_length=200, blank=True, null=True)
     data_agendamento = models.DateTimeField()
@@ -198,22 +182,35 @@ class Reserva(models.Model):
     informacoes_voo = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pendente')
     criado_em = models.DateTimeField(auto_now_add=True)
+    
+    # 4. NOVOS CAMPOS: PARCEIRO & COMISSÃO
+    parceiro = models.ForeignKey(Parceiro, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservas')
+    valor_comissao = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name="Comissão do Parceiro")
+    status_pagamento_comissao = models.CharField(
+        max_length=20,
+        choices=[('pendente', 'Pendente'), ('pago', 'Pago')],
+        default='pendente'
+    )
+
+    def save(self, *args, **kwargs):
+        # A. Garante que tem código
+        if not self.codigo:
+            self.codigo = gerar_codigo_reserva()
+            
+        # B. Calcula Comissão Automática (Se tiver parceiro e comissão for zero)
+        if self.parceiro and self.valor_comissao == 0 and self.valor > 0:
+            porcentagem = self.parceiro.comissao_padrao
+            self.valor_comissao = (self.valor * porcentagem) / 100
+            
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        # Agora mostramos o Código no painel admin também
         return f"Reserva #{self.codigo} - {self.cliente}"
 
-class Bloqueio(models.Model):
-    data = models.DateField("Data Bloqueada")
-    # Se deixar vazio, bloqueia TUDO (Dia Off). Se preencher, bloqueia só esse passeio.
-    praia = models.ForeignKey('Praia', on_delete=models.CASCADE, null=True, blank=True, verbose_name="Passeio Específico")
-    motivo = models.CharField(max_length=100, default="Vagas Esgotadas")
-    criado_em = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        tipo = self.praia.nome if self.praia else "GERAL"
-        return f"{self.data} - {tipo}"
-
-    class Meta:
-        ordering = ['-data'] # Mostra os bloqueios futuros primeiro
-        unique_together = ['data', 'praia'] # Não deixa bloquear a mesma coisa 2x
+# =========================================
+# 4. SINAIS (SIGNALS)
+# =========================================
+@receiver(post_save, sender=User)
+def criar_perfil_parceiro(sender, instance, created, **kwargs):
+    if created and not instance.is_superuser:
+        Parceiro.objects.get_or_create(usuario=instance)
