@@ -448,30 +448,28 @@ def cadastro_parceiro(request):
     if request.method == 'POST':
         form = CadastroParceiroForm(request.POST)
         if form.is_valid():
-            # 1. Pega os dados
+            # 1. Pega os dados limpos
             nome = form.cleaned_data['nome_completo']
             email = form.cleaned_data['email']
             senha = form.cleaned_data['senha']
             telefone = form.cleaned_data['telefone']
-            pix = form.cleaned_data['chave_pix']
+            # REMOVIDO: pix = form.cleaned_data['chave_pix']
 
-            # 2. Cria o Usuário (INATIVO até confirmar email - ou ATIVO direto se preferir agilizar)
-            # Vamos criar ATIVO direto pra simplificar o teste hoje, depois colocamos a confirmação de email?
-            # Ou quer fazer com confirmação agora mesmo?
-            # Vou fazer ATIVO direto pra você ver funcionando já, ok?
-            
+            # 2. Cria o Usuário (Email será o Login)
             user = User.objects.create_user(username=email, email=email, password=senha)
             user.first_name = nome
             user.save()
 
-            # 3. Atualiza o perfil de Parceiro (que é criado automaticamente pelo Signal)
-            parceiro = user.parceiro
-            parceiro.telefone = telefone
-            parceiro.chave_pix = pix
-            parceiro.save()
+            # 3. Atualiza o perfil de Parceiro
+            # O perfil já foi criado automaticamente pelo 'signal' no models.py quando demos user.save()
+            if hasattr(user, 'parceiro'):
+                parceiro = user.parceiro
+                parceiro.telefone = telefone
+                # A chave_pix continua vazia (None) por enquanto
+                parceiro.save()
 
-            # 4. Manda pro Login com mensagem de sucesso
-            messages.success(request, "Cadastro realizado! Faça login para começar a vender.")
+            # 4. Manda pro Login
+            messages.success(request, "Cadastro realizado com sucesso! Acesse sua conta.")
             return redirect('login_parceiro')
     else:
         form = CadastroParceiroForm()

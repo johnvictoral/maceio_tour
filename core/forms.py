@@ -55,9 +55,9 @@ class TransferForm(forms.ModelForm):
 # --- FORMULÁRIO DE CADASTRO DE PARCEIRO ---
 class CadastroParceiroForm(forms.Form):
     nome_completo = forms.CharField(label="Nome Completo", max_length=100, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Seu nome ou nome da empresa'}))
-    email = forms.EmailField(label="E-mail", widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Para receber confirmação'}))
+    email = forms.EmailField(label="E-mail (Login)", widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Será usado para entrar no sistema'}))
     telefone = forms.CharField(label="WhatsApp / Telefone", max_length=20, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(82) 99999-9999'}))
-    chave_pix = forms.CharField(label="Sua Chave Pix", required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'CPF, Email ou Aleatória (Para receber comissões)'}))
+    # REMOVIDO: chave_pix = ...
     senha = forms.CharField(label="Crie uma Senha", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
     confirmar_senha = forms.CharField(label="Confirme a Senha", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
 
