@@ -135,6 +135,9 @@ class CustomLoginView(LoginView):
 
 @login_required
 def painel(request):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     # 1. Configurações de Data
     hoje = timezone.now()
     mes_atual = hoje.month
@@ -204,6 +207,9 @@ def painel(request):
 
 @login_required
 def gerenciar_banner(request):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     if request.method == 'POST' and 'upload_image' in request.POST:
         form = ImagemCarrosselForm(request.POST, request.FILES)
         if form.is_valid():
@@ -223,6 +229,9 @@ def gerenciar_banner(request):
 # --- AQUI ESTÁ A VIEW MODIFICADA (ATENÇÃO!) ---
 @login_required
 def detalhe_reserva(request, reserva_id):
+    #TRAVA DE SEGURANÇA
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     reserva = get_object_or_404(Reserva, id=reserva_id)
     guias_disponiveis = Guia.objects.filter(ativo=True)
     
@@ -267,6 +276,9 @@ def detalhe_reserva(request, reserva_id):
 # ... (MANTENHA O RESTO DAS VIEWS IGUAIS ABAIXO) ...
 @login_required
 def editar_reserva(request, reserva_id):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     reserva = get_object_or_404(Reserva, id=reserva_id)
     if request.method == 'POST':
         form = ReservaEditForm(request.POST, instance=reserva)
@@ -280,6 +292,9 @@ def editar_reserva(request, reserva_id):
 
 @login_required
 def excluir_reserva(request, reserva_id):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     if request.method == 'POST':
         reserva = get_object_or_404(Reserva, id=reserva_id)
         reserva.delete()
@@ -291,12 +306,18 @@ def excluir_reserva(request, reserva_id):
 
 @login_required
 def lista_clientes(request):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     todos_os_clientes = Cliente.objects.all().order_by('nome')
     context = {'clientes': todos_os_clientes}
     return render(request, 'dashboard/lista_clientes.html', context)
 
 @login_required
 def excluir_cliente(request, cliente_id):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     if request.method == 'POST':
         cliente = get_object_or_404(Cliente, id=cliente_id)
         cliente.delete()
@@ -306,6 +327,9 @@ def excluir_cliente(request, cliente_id):
 
 @login_required
 def lista_parceiros(request):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     if request.method == 'POST':
         form = GuiaForm(request.POST)
         if form.is_valid():
@@ -319,6 +343,9 @@ def lista_parceiros(request):
 
 @login_required
 def excluir_parceiro(request, guia_id):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     if request.method == 'POST':
         guia = get_object_or_404(Guia, id=guia_id)
         guia.delete()
@@ -446,6 +473,9 @@ def calendario_api(request):
 
 @login_required
 def nova_reserva_manual(request):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     # Verifica se já temos dados de cliente pré-carregados
     initial_data = {}
     if 'cliente_id' in request.GET:
@@ -521,11 +551,17 @@ def nova_reserva_manual(request):
 
 @login_required
 def lista_praias(request):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     praias = Praia.objects.all().order_by('nome')
     return render(request, 'dashboard/lista_praias.html', {'praias': praias})
 
 @login_required
 def nova_praia(request):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     if request.method == 'POST':
         form = PraiaForm(request.POST, request.FILES)
         if form.is_valid():
@@ -538,6 +574,9 @@ def nova_praia(request):
 
 @login_required
 def editar_praia(request, praia_id):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     praia = get_object_or_404(Praia, id=praia_id)
     if request.method == 'POST':
         form = PraiaForm(request.POST, request.FILES, instance=praia)
@@ -551,6 +590,9 @@ def editar_praia(request, praia_id):
 
 @login_required
 def excluir_praia(request, praia_id):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     praia = get_object_or_404(Praia, id=praia_id)
     praia.delete()
     messages.success(request, 'Praia removida.')
@@ -606,11 +648,17 @@ def gerar_voucher(request, reserva_id):
 
 @login_required
 def lista_depoimentos(request):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     depoimentos = Depoimento.objects.all().order_by('-id')
     return render(request, 'dashboard/lista_depoimentos.html', {'depoimentos': depoimentos})
 
 @login_required
 def novo_depoimento(request):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     if request.method == 'POST':
         form = DepoimentoForm(request.POST, request.FILES)
         if form.is_valid():
@@ -623,6 +671,9 @@ def novo_depoimento(request):
 
 @login_required
 def excluir_depoimento(request, depoimento_id):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     depoimento = get_object_or_404(Depoimento, id=depoimento_id)
     depoimento.delete()
     messages.success(request, 'Depoimento removido.')
@@ -630,11 +681,17 @@ def excluir_depoimento(request, depoimento_id):
 
 @login_required
 def lista_posts(request):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     posts = Post.objects.all().order_by('-data_publicacao')
     return render(request, 'dashboard/lista_posts.html', {'posts': posts})
 
 @login_required
 def novo_post(request):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     if request.method == 'POST':
         form = PostForm(request.POST, request.FILES)
         if form.is_valid():
@@ -650,6 +707,9 @@ def novo_post(request):
 
 @login_required
 def editar_post(request, post_id):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     post = get_object_or_404(Post, id=post_id)
     if request.method == 'POST':
         form = PostForm(request.POST, request.FILES, instance=post)
@@ -663,6 +723,9 @@ def editar_post(request, post_id):
 
 @login_required
 def excluir_post(request, post_id):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     post = get_object_or_404(Post, id=post_id)
     post.delete()
     messages.success(request, 'Postagem removida.')
@@ -670,11 +733,17 @@ def excluir_post(request, post_id):
 
 @login_required
 def gerenciar_carrossel(request):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     imagens = ImagemCarrossel.objects.all().order_by('-id')
     return render(request, 'dashboard/lista_carrossel.html', {'imagens': imagens})
 
 @login_required
 def novo_carrossel(request):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     if request.method == 'POST':
         form = CarrosselForm(request.POST, request.FILES)
         if form.is_valid():
@@ -687,6 +756,9 @@ def novo_carrossel(request):
 
 @login_required
 def editar_carrossel(request, item_id):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     item = get_object_or_404(ImagemCarrossel, id=item_id)
     if request.method == 'POST':
         form = CarrosselForm(request.POST, request.FILES, instance=item)
@@ -700,6 +772,9 @@ def editar_carrossel(request, item_id):
 
 @login_required
 def excluir_carrossel(request, item_id):
+    # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
+    if not request.user.is_staff:
+        return redirect('painel_parceiro')
     item = get_object_or_404(ImagemCarrossel, id=item_id)
     item.delete()
     messages.success(request, 'Banner removido.')

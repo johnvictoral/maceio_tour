@@ -517,9 +517,26 @@ def painel_parceiro(request):
     }
     return render(request, 'core/painel_parceiro.html', context)
 
-def logout_parceiro(request):
-    logout(request)
-    return redirect('login_parceiro')
+def login_parceiro(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        senha = request.POST.get('senha')
+        user = authenticate(request, username=email, password=senha)
+        
+        if user is not None:
+            login(request, user)
+            # SE FOR PARCEIRO, vai para o painel de parceiro
+            if hasattr(user, 'parceiro'):
+                return redirect('painel_parceiro')
+            # SE FOR VOCÊ (ADMIN), vai para o dashboard geral
+            elif user.is_staff:
+                return redirect('/dashboard/') 
+            else:
+                return redirect('home')
+        else:
+            messages.error(request, "Email ou senha inválidos.")
+    
+    return render(request, 'core/parceiro_login.html')
 
 def nova_reserva_parceiro(request):
     return HttpResponse("Em breve: Formulário de Venda")
