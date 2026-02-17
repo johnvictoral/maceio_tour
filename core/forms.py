@@ -2,6 +2,8 @@ from django import forms
 from .models import Cliente, Reserva,Transfer
 from .models import Reserva, Bloqueio
 from .models import Parceiro, Reserva, Cliente
+from django.contrib.auth.models import Usergit
+
 
 class ClientePublicoForm(forms.ModelForm):
     class Meta:
