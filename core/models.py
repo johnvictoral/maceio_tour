@@ -212,5 +212,6 @@ class Reserva(models.Model):
 # =========================================
 @receiver(post_save, sender=User)
 def criar_perfil_parceiro(sender, instance, created, **kwargs):
-    if created and not instance.is_superuser:
+    # Só cria perfil de parceiro se NÃO for superusuário e NÃO for staff
+    if created and not instance.is_superuser and not instance.is_staff:
         Parceiro.objects.get_or_create(usuario=instance)

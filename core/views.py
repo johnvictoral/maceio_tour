@@ -493,14 +493,21 @@ def login_parceiro(request):
 
 @login_required(login_url='login_parceiro')
 def painel_parceiro(request):
-    # Garante que é um parceiro
+    # SEGURANÇA: Se for superusuário (você), ele não deve usar o painel de parceiro comum
+    # Ou, se for um usuário comum que não é parceiro, barramos o acesso.
     if not hasattr(request.user, 'parceiro'):
+        messages.error(request, "Acesso restrito a parceiros cadastrados.")
         return redirect('home')
         
     parceiro = request.user.parceiro
-    reservas = parceiro.reservas.all().order_by('-data_agendamento')
     
-    # Cálculo simples de comissão a receber
+    # SEGURANÇA: Garantir que o parceiro está ATIVO
+    if not parceiro.ativo:
+        logout(request)
+        messages.error(request, "Sua conta de parceiro está desativada. Entre em contato com o suporte.")
+        return redirect('login_parceiro')
+
+    reservas = parceiro.reservas.all().order_by('-data_agendamento')
     total_a_receber = sum(r.valor_comissao for r in reservas if r.status_pagamento_comissao == 'pendente')
     
     context = {
