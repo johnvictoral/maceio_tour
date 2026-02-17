@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="bg-light min-vh-100 pb-5">
+    <div class="bg-success text-white py-4 shadow-sm mb-4">
+        <div class="container d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 fw-bold"><i class="bi bi-plus-circle me-2"></i>Nova Reserva</h4>
+            <a href="{% url 'painel_parceiro' %}" class="btn btn-outline-light btn-sm rounded-pill">
+                <i class="bi bi-arrow-left me-1"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4">
+                        <form method="POST">
+                            {% csrf_token %}
+
+                            <h5 class="text-success fw-bold mb-3"><i class="bi bi-person-fill me-2"></i>Dados do Cliente</h5>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted">Nome</label>
+                                    <input type="text" name="nome" class="form-control bg-light" placeholder="Ex: Maria" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted">Sobrenome</label>
+                                    <input type="text" name="sobrenome" class="form-control bg-light" placeholder="Ex: Silva" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted">E-mail</label>
+                                    <input type="email" name="email" class="form-control bg-light" placeholder="cliente@email.com" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted">WhatsApp / Telefone</label>
+                                    <input type="text" name="telefone" class="form-control bg-light" placeholder="(82) 99999-9999" required>
+                                </div>
+                            </div>
+
+                            <hr class="my-4 opacity-25">
+
+                            <h5 class="text-success fw-bold mb-3"><i class="bi bi-geo-alt-fill me-2"></i>Detalhes do Serviço</h5>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted">Tipo de Serviço</label>
+                                    <select name="tipo" id="tipo_servico" class="form-select bg-light" onchange="toggleCampos()" required>
+                                        <option value="passeio">Passeio (Destinos)</option>
+                                        <option value="transfer">Transfer (Aeroporto/Hotéis)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted">Data</label>
+                                    <input type="date" name="data" class="form-control bg-light" required>
+                                </div>
+
+                                <div class="col-md-6" id="div_passeio">
+                                    <label class="form-label small fw-bold text-muted">Escolha o Destino</label>
+                                    <select name="praia" class="form-select bg-light border-success">
+                                        {% for praia in praias %}
+                                            <option value="{{ praia.id }}">{{ praia.nome }} (R$ {{ praia.valor }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 d-none" id="div_transfer">
+                                    <label class="form-label small fw-bold text-muted">Escolha o Transfer</label>
+                                    <select name="transfer" class="form-select bg-light border-primary">
+                                        {% for transfer in transfers %}
+                                            <option value="{{ transfer.id }}">{{ transfer.titulo }} (R$ {{ transfer.valor }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted">Nº de Passageiros</label>
+                                    <input type="number" name="passageiros" class="form-control bg-light" value="1" min="1" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted">Observações (Local de Saída, Horário do Voo, etc.)</label>
+                                <textarea name="observacoes" class="form-control bg-light" rows="3" placeholder="Ex: Buscar no Hotel Ponta Verde às 08:00"></textarea>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success btn-lg rounded-pill fw-bold shadow">
+                                    Confirmar e Enviar para John <i class="bi bi-send ms-2"></i>
+                                </button>
+                                <p class="text-center text-muted small mt-3">A reserva entrará como "Pendente" até que o John confirme.</p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleCampos() {
+    const tipo = document.getElementById('tipo_servico').value;
+    const divPasseio = document.getElementById('div_passeio');
+    const divTransfer = document.getElementById('div_transfer');
+
+    if (tipo === 'passeio') {
+        divPasseio.classList.remove('d-none');
+        divTransfer.classList.add('d-none');
+    } else {
+        divPasseio.classList.add('d-none');
+        divTransfer.classList.remove('d-none');
+    }
+}
+</script>
+{% endblock %}

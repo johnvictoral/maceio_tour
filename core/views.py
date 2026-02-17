@@ -545,3 +545,62 @@ def logout_parceiro(request):
     logout(request)
     messages.success(request, "Você saiu com segurança. Até logo!")
     return redirect('login_parceiro')
+
+@login_required(login_url='login_parceiro')
+def nova_reserva_parceiro(request):
+    if not hasattr(request.user, 'parceiro'):
+        return redirect('home')
+
+    praias = Praia.objects.filter(ativo=True)
+    transfers = Transfer.objects.all()
+
+    if request.method == 'POST':
+        # 1. Captura dados do Cliente
+        nome = request.POST.get('nome')
+        sobrenome = request.POST.get('sobrenome')
+        email = request.POST.get('email')
+        telefone = request.POST.get('telefone')
+
+        # Cria ou recupera o cliente pelo e-mail
+        cliente, created = Cliente.objects.get_or_create(
+            email=email,
+            defaults={'nome': nome, 'sobrenome': sobrenome, 'telefone': telefone}
+        )
+
+        # 2. Captura dados da Reserva
+        tipo = request.POST.get('tipo')
+        data_str = request.POST.get('data')
+        passageiros = request.POST.get('passageiros')
+        obs = request.POST.get('observacoes')
+
+        reserva = Reserva(
+            cliente=cliente,
+            parceiro=request.user.parceiro,
+            tipo=tipo,
+            data_agendamento=data_str,
+            numero_passageiros=passageiros,
+            informacoes_voo=obs,
+            status='pendente'
+        )
+
+        # Define destino e valor com base no tipo
+        if tipo == 'passeio':
+            praia_id = request.POST.get('praia')
+            praia = Praia.objects.get(id=praia_id)
+            reserva.praia_destino = beach
+            reserva.valor = praia.valor * int(passageiros) # Exemplo de cálculo
+        else:
+            transfer_id = request.POST.get('transfer')
+            trans = Transfer.objects.get(id=transfer_id)
+            reserva.local_chegada = trans.titulo
+            reserva.valor = trans.valor
+
+        reserva.save() # O cálculo da comissão acontece no save() do models.py que criamos antes!
+        
+        messages.success(request, f"Reserva #{reserva.codigo} cadastrada! Aguarde a confirmação.")
+        return redirect('painel_parceiro')
+
+    return render(request, 'core/parceiro_nova_reserva.html', {
+        'praias': praias,
+        'transfers': transfers
+    })
