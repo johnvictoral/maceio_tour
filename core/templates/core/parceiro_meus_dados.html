@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow rounded-4 border-0">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold text-success mb-4">Meus Dados</h4>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Nome / Empresa</label>
+                            <input type="text" name="nome" class="form-control" value="{{ request.user.first_name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">WhatsApp</label>
+                            <input type="text" name="telefone" class="form-control" value="{{ parceiro.telefone }}" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">Chave Pix (Para receber comissões)</label>
+                            <input type="text" name="chave_pix" class="form-control border-success" value="{{ parceiro.chave_pix|default:'' }}" placeholder="CPF, E-mail ou Celular">
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success rounded-pill fw-bold">Salvar Alterações</button>
+                            <a href="{% url 'painel_parceiro' %}" class="btn btn-light rounded-pill">Voltar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

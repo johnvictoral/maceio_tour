@@ -588,3 +588,29 @@ def atualizar_pagamento_comissao(request, reserva_id):
     
     messages.success(request, f"Comissão da reserva #{reserva.codigo} marcada como PAGA! ✅")
     return redirect('detalhe_reserva', reserva_id=reserva.id)
+
+@login_required(login_url='login_parceiro')
+def meus_dados_parceiro(request):
+    if not hasattr(request.user, 'parceiro'):
+        return redirect('home')
+        
+    parceiro = request.user.parceiro
+    
+    if request.method == 'POST':
+        nome = request.POST.get('nome')
+        telefone = request.POST.get('telefone')
+        chave_pix = request.POST.get('chave_pix')
+        
+        # Atualiza o nome no usuário do Django
+        request.user.first_name = nome
+        request.user.save()
+        
+        # Atualiza dados no perfil de parceiro
+        parceiro.telefone = telefone
+        parceiro.chave_pix = chave_pix
+        parceiro.save()
+        
+        messages.success(request, "Seus dados foram atualizados com sucesso! ✅")
+        return redirect('painel_parceiro')
+
+    return render(request, 'core/parceiro_meus_dados.html', {'parceiro': parceiro})
