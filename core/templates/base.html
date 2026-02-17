@@ -164,19 +164,24 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'contato' %}">Contato</a></li>
                 </ul>
                 
-                <div class="d-flex gap-2 ms-lg-3">
+                <div class="d-flex gap-2 ms-lg-3 flex-wrap justify-content-center mt-3 mt-lg-0">
+                    <a href="{% url 'login_parceiro' %}" class="btn btn-brand-teal shadow-sm btn-sm px-3">
+                        <i class="bi bi-briefcase-fill me-1"></i> Seja Parceiro
+                    </a>
+
                     {% if user.is_authenticated %}
                         <a href="{% url 'painel' %}" class="btn btn-outline-dark btn-sm">
                             <i class="bi bi-speedometer2"></i> Painel
                         </a>
                     {% else %}
-                        <a href="{% url 'login' %}" class="btn btn-brand-orange shadow-sm btn-sm px-4">
+                        <a href="{% url 'login' %}" class="btn btn-brand-orange shadow-sm btn-sm px-3">
                             <i class="bi bi-lock-fill"></i> Área Restrita
                         </a>
                     {% endif %}
                 </div>
             </div>
         </div>
+    </nav>
     </nav>
     {% endblock %}
 
@@ -212,6 +217,7 @@
                 <li class="mb-2"><a href="/#passeios" class="text-white-50">Passeios</a></li>
                 <li class="mb-2"><a href="/#transfers-section" class="text-white-50">Transfers</a></li>
                 <li class="mb-2"><a href="{% url 'consultar_reserva' %}" class="text-white-50">Minha Reserva</a></li>
+                <li class="mb-2"><a href="{% url 'login_parceiro' %}" class="text-white fw-bold">Portal do Parceiro</a></li>
                 <li class="mb-2"><a href="{% url 'contato' %}" class="text-white-50">Fale Conosco</a></li>
             </ul>
           </div>

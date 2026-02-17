@@ -1,47 +1,63 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-header bg-success text-white text-center py-4 rounded-top-4">
-                    <h4 class="mb-0 fw-bold"><i class="bi bi-briefcase-fill me-2"></i>Área do Parceiro</h4>
-                    <p class="mb-0 small opacity-75">Vá com John - B2B</p>
+<div class="bg-light min-vh-100 d-flex align-items-center py-5">
+    <div class="container">
+        
+        <div class="text-center mb-5">
+            <h2 class="fw-bold text-success">Portal do Parceiro Vá com John</h2>
+            <p class="text-muted">Gerencie suas indicações e acompanhe suas comissões.</p>
+        </div>
+
+        <div class="row justify-content-center g-4">
+            
+            <div class="col-md-5">
+                <div class="card h-100 shadow border-0 rounded-4">
+                    <div class="card-body p-4 p-md-5">
+                        <h4 class="fw-bold mb-4"><i class="bi bi-box-arrow-in-right me-2 text-primary"></i>Já sou parceiro</h4>
+                        
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} small">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold">E-mail</label>
+                                <input type="email" name="email" class="form-control bg-light" placeholder="seu@email.com" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label text-muted small fw-bold">Senha</label>
+                                <input type="password" name="senha" class="form-control bg-light" placeholder="******" required>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold">
+                                    Entrar no Painel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-                <div class="card-body p-4 p-md-5">
-                    
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                        {% endfor %}
-                    {% endif %}
+            </div>
 
-                    <form method="POST">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">E-mail de Acesso</label>
-                            <input type="email" name="email" class="form-control form-control-lg bg-light" placeholder="seu@email.com" required>
-                        </div>
+            <div class="col-md-5">
+                <div class="card h-100 shadow border-0 rounded-4 bg-success text-white" style="background: linear-gradient(135deg, #198754, #146c43);">
+                    <div class="card-body p-4 p-md-5 d-flex flex-column justify-content-center text-center">
                         <div class="mb-4">
-                            <label class="form-label fw-bold">Senha</label>
-                            <input type="password" name="senha" class="form-control form-control-lg bg-light" placeholder="******" required>
+                            <i class="bi bi-person-plus-fill fs-1"></i>
                         </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-success btn-lg rounded-pill fw-bold shadow-sm">
-                                Entrar no Painel
-                            </button>
-                        </div>
-                    </form>
-
-                    <div class="text-center mt-4 pt-3 border-top">
-                        <p class="text-muted small">Ainda não é parceiro?</p>
-                        <a href="{% url 'cadastro_parceiro' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                            Cadastrar Minha Empresa
+                        <h3 class="fw-bold">Ainda não é parceiro?</h3>
+                        <p class="opacity-75 mb-4">Cadastre sua agência, hotel ou recepção e comece a ganhar comissões por indicação hoje mesmo.</p>
+                        
+                        <a href="{% url 'cadastro_parceiro' %}" class="btn btn-light btn-lg rounded-pill fw-bold text-success shadow">
+                            Quero me Cadastrar
                         </a>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
