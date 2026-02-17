@@ -87,34 +87,44 @@ Acesse: www.vacomjohn.com.br{% endfilter %}"
 </div>
 
 <div class="card shadow-sm border-0">
-  <div class="card-header">
+  <div class="card-header bg-white">
     <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
       <li class="nav-item" role="presentation"><button class="nav-link active" id="reserva-tab" data-bs-toggle="tab" data-bs-target="#reserva-tab-pane" type="button" role="tab">Detalhes da Reserva</button></li>
       <li class="nav-item" role="presentation"><button class="nav-link" id="guia-tab" data-bs-toggle="tab" data-bs-target="#guia-tab-pane" type="button" role="tab">Guia Responsável</button></li>
+      {% if reserva.parceiro %}
+      <li class="nav-item" role="presentation"><button class="nav-link text-danger fw-bold" id="parceiro-tab" data-bs-toggle="tab" data-bs-target="#parceiro-tab-pane" type="button" role="tab"><i class="bi bi-piggy-bank me-1"></i> Comissão</button></li>
+      {% endif %}
     </ul>
   </div>
   <div class="card-body">
     <div class="tab-content" id="myTabContent">
       <div class="tab-pane fade show active" id="reserva-tab-pane" role="tabpanel">
         <div class="row">
-          <div class="col-md-6">
-            <h5 class="mb-3">Informações do Serviço</h5>
+          <div class="col-md-6 border-end">
+            <h5 class="mb-3 text-primary fw-bold">Informações do Serviço</h5>
             <dl class="row">
               <dt class="col-sm-5">Tipo de Serviço:</dt><dd class="col-sm-7">{{ reserva.get_tipo_display }}</dd>
-              <dt class="col-sm-5">Valor Registrado:</dt><dd class="col-sm-7 fw-bold">R$ {{ reserva.valor|floatformat:2|default:"Não definido" }}</dd>
+              <dt class="col-sm-5">Valor Total:</dt><dd class="col-sm-7 fw-bold text-success">R$ {{ reserva.valor|floatformat:2 }}</dd>
               <dt class="col-sm-5">Nº de Passageiros:</dt><dd class="col-sm-7">{{ reserva.numero_passageiros }}</dd>
               {% if reserva.tipo == 'passeio' %}
                 <dt class="col-sm-5">Passeio:</dt><dd class="col-sm-7">{{ reserva.praia_destino.nome }}</dd>
-                <dt class="col-sm-5">Local de Partida:</dt><dd class="col-sm-7">{{ reserva.local_partida }}</dd>
+                <dt class="col-sm-5">Partida:</dt><dd class="col-sm-7">{{ reserva.local_partida }}</dd>
               {% else %}
                 <dt class="col-sm-5">Trajeto:</dt><dd class="col-sm-7">{{ reserva.local_partida }} → {{ reserva.local_chegada }}</dd>
                 <dt class="col-sm-5">Voo:</dt><dd class="col-sm-7">{{ reserva.informacoes_voo|default:"Não informado" }}</dd>
               {% endif %}
-              <dt class="col-sm-5">Pedido feito em:</dt><dd class="col-sm-7">{{ reserva.data_criacao|date:"d/m/Y, H:i" }}</dd>
+              <dt class="col-sm-5">Venda feita por:</dt>
+              <dd class="col-sm-7">
+                  {% if reserva.parceiro %}
+                    <span class="badge bg-info text-dark">Parceiro: {{ reserva.parceiro.usuario.first_name }}</span>
+                  {% else %}
+                    <span class="badge bg-light text-dark">Site Direto</span>
+                  {% endif %}
+              </dd>
             </dl>
           </div>
           <div class="col-md-6">
-            <h5 class="mb-3">Informações do Cliente</h5>
+            <h5 class="mb-3 text-primary fw-bold">Informações do Cliente</h5>
             <dl class="row">
               <dt class="col-sm-4">Nome:</dt><dd class="col-sm-8">{{ reserva.cliente.nome }} {{ reserva.cliente.sobrenome }}</dd>
               <dt class="col-sm-4">Email:</dt><dd class="col-sm-8">{{ reserva.cliente.email }}</dd>
@@ -125,53 +135,108 @@ Acesse: www.vacomjohn.com.br{% endfilter %}"
       </div>
       
       <div class="tab-pane fade" id="guia-tab-pane" role="tabpanel">
-        <h5 class="mb-3">Atribuir Guia</h5>
-        
+        <h5 class="mb-3 fw-bold">Atribuir Guia Responsável</h5>
         {% if reserva.guia %}
-            <p>Guia atual: <strong>{{ reserva.guia.nome }}</strong></p>
-        {% else %}
-            <p class="text-muted">Nenhum guia atribuído.</p>
+            <div class="alert alert-info d-flex align-items-center">
+                <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+                <div>Guia atual: <strong>{{ reserva.guia.nome }}</strong> ({{ reserva.guia.modelo_carro }})</div>
+            </div>
         {% endif %}
-        
-        <hr>
-        
         <form method="POST" action="{% url 'detalhe_reserva' reserva.id %}">
           {% csrf_token %}
-          <div class="row align-items-end">
+          <div class="row align-items-end g-3">
             <div class="col-md-8">
-              <label for="guia" class="form-label">Selecione um guia disponível:</label>
-              <select name="guia" id="guia" class="form-select">
+              <label for="guia" class="form-label small fw-bold">Selecione o Guia:</label>
+              <select name="guia" id="guia" class="form-select bg-light">
                 <option value="">-- Nenhum --</option>
                 {% for g in guias %}
-                    <option value="{{ g.id }}" {% if reserva.guia.id == g.id %}selected{% endif %}>
-                        {{ g.nome }}
-                    </option>
+                    <option value="{{ g.id }}" {% if reserva.guia.id == g.id %}selected{% endif %}>{{ g.nome }} - {{ g.modelo_carro }}</option>
                 {% endfor %}
               </select>
             </div>
             <div class="col-md-4">
-              <button type="submit" class="btn btn-primary w-100">Salvar Guia</button>
+              <button type="submit" class="btn btn-primary w-100">Atualizar Guia</button>
             </div>
           </div>
         </form>
       </div>
 
+      {% if reserva.parceiro %}
+      <div class="tab-pane fade" id="parceiro-tab-pane" role="tabpanel">
+        <div class="row">
+            <div class="col-md-7">
+                <div class="card border-warning shadow-sm">
+                    <div class="card-body">
+                        <h5 class="fw-bold text-warning mb-4"><i class="bi bi-wallet2 me-2"></i>Financeiro do Parceiro</h5>
+                        
+                        <div class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                            <span>Parceiro Indicador:</span>
+                            <span class="fw-bold">{{ reserva.parceiro.usuario.first_name }}</span>
+                        </div>
+                        <div class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                            <span>Valor da Comissão:</span>
+                            <span class="fw-bold text-success fs-5">R$ {{ reserva.valor_comissao|floatformat:2 }}</span>
+                        </div>
+                        <div class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                            <span>Chave Pix para Pagamento:</span>
+                            <span class="badge bg-light text-dark fs-6">{{ reserva.parceiro.chave_pix|default:"NÃO CADASTRADA" }}</span>
+                        </div>
+                        <div class="mb-4 d-flex justify-content-between">
+                            <span>Status do Pagamento:</span>
+                            {% if reserva.status_pagamento_comissao == 'pago' %}
+                                <span class="badge bg-success">PAGO</span>
+                            {% else %}
+                                <span class="badge bg-danger">PENDENTE</span>
+                            {% endif %}
+                        </div>
+
+                        {% if reserva.status_pagamento_comissao == 'pendente' %}
+                        <form method="POST" action="{% url 'atualizar_pagamento_comissao' reserva.id %}">
+                            {% csrf_token %}
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-warning fw-bold">
+                                    <i class="bi bi-check-all me-1"></i> MARCAR COMO PIX ENVIADO
+                                </button>
+                            </div>
+                        </form>
+                        {% else %}
+                            <div class="alert alert-success text-center mb-0">
+                                <i class="bi bi-check-circle-fill me-2"></i> Esta comissão já foi paga.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="alert alert-secondary small">
+                    <h6 class="fw-bold"><i class="bi bi-info-circle me-1"></i> Regras de Comissão:</h6>
+                    <ul class="mb-0">
+                        <li><strong>Transfer:</strong> Valor fixo de R$ 20,00.</li>
+                        <li><strong>Passeios:</strong> 10% sobre o valor total.</li>
+                        <li>A comissão só fica "Disponível" para o parceiro quando o status da reserva mudar para <strong>Concluído</strong>.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+      </div>
+      {% endif %}
+
     </div>
   </div>
 
-  <div class="card-footer bg-light text-end">
+  <div class="card-footer bg-light text-end py-3">
     <form method="POST" class="d-inline">
       {% csrf_token %}
       {% if reserva.status == 'pendente' %}
-        <button type="submit" name="status" value="confirmado" class="btn btn-success"><i class="bi bi-check-circle"></i> Confirmar Reserva</button>
+        <button type="submit" name="status" value="confirmado" class="btn btn-success px-4 rounded-pill shadow-sm"><i class="bi bi-check-circle me-1"></i> Confirmar Reserva</button>
       {% endif %}
       {% if reserva.status == 'confirmado' %}
-        <button type="submit" name="status" value="concluido" class="btn btn-info text-white"><i class="bi bi-flag"></i> Marcar como Concluída</button>
+        <button type="submit" name="status" value="concluido" class="btn btn-info text-white px-4 rounded-pill shadow-sm"><i class="bi bi-flag-fill me-1"></i> Marcar como Concluída</button>
       {% endif %}
       {% if reserva.status != 'cancelado' and reserva.status != 'concluido' %}
-        <button type="submit" name="status" value="cancelado" class="btn btn-danger"><i class="bi bi-x-circle"></i> Cancelar Reserva</button>
+        <button type="submit" name="status" value="cancelado" class="btn btn-outline-danger px-4 rounded-pill ms-2"><i class="bi bi-x-circle me-1"></i> Cancelar Reserva</button>
       {% endif %}
     </form>
   </div>
-  </div>
+</div>
 {% endblock %}

@@ -193,15 +193,18 @@ class Reserva(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        # A. Garante que tem código
-        if not self.codigo:
-            self.codigo = gerar_codigo_reserva()
-            
-        # B. Calcula Comissão Automática (Se tiver parceiro e comissão for zero)
-        if self.parceiro and self.valor_comissao == 0 and self.valor > 0:
-            porcentagem = self.parceiro.comissao_padrao
-            self.valor_comissao = (self.valor * porcentagem) / 100
-            
+        # 1. Lógica de cálculo de comissão
+        if self.parceiro:
+            if self.tipo == 'transfer':
+                self.valor_comissao = 20.00  # Valor fixo conforme combinamos
+            else:
+                # 10% para passeios. Use Decimal para evitar erros matemáticos
+                from decimal import Decimal
+                self.valor_comissao = self.valor * Decimal('0.10')
+        else:
+            self.valor_comissao = 0.00 # Se não tem parceiro, comissão é zero
+
+        # 2. SALVAR (Este comando deve estar alinhado com o 'if' inicial)
         super().save(*args, **kwargs)
 
     def __str__(self):

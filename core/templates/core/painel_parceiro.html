@@ -8,7 +8,10 @@
                 <h4 class="mb-0 fw-bold">Olá, {{ parceiro.usuario.first_name }}! 👋</h4>
                 <small class="opacity-75">Painel do Parceiro</small>
             </div>
-            <div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'meus_dados_parceiro' %}" class="btn btn-light btn-sm rounded-pill px-3 text-success fw-bold">
+                    <i class="bi bi-gear-fill me-1"></i> Meus Dados
+                </a>
                 <a href="{% url 'logout_parceiro' %}" class="btn btn-outline-light btn-sm rounded-pill px-3">
                     <i class="bi bi-box-arrow-right me-1"></i> Sair
                 </a>
@@ -24,7 +27,7 @@
                     <div class="card-body">
                         <h6 class="text-muted text-uppercase small fw-bold">Comissão a Receber</h6>
                         <h2 class="text-success fw-bold mb-0">R$ {{ total_a_receber|floatformat:2 }}</h2>
-                        <small class="text-muted"><i class="bi bi-wallet2"></i> Saldo pendente</small>
+                        <small class="text-muted"><i class="bi bi-info-circle me-1"></i>Apenas de serviços concluídos</small>
                     </div>
                 </div>
             </div>
@@ -41,7 +44,7 @@
 
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm h-100 bg-primary text-white rounded-4" style="background: linear-gradient(45deg, #198754, #20c997);">
-                    <div class="card-body d-flex flex-column justify-content-center align-items-center text-center cursor-pointer" onclick="window.location.href='{% url 'nova_reserva_parceiro' %}'" style="cursor: pointer;">
+                    <div class="card-body d-flex flex-column justify-content-center align-items-center text-center" onclick="window.location.href='{% url 'nova_reserva_parceiro' %}'" style="cursor: pointer;">
                         <i class="bi bi-plus-circle-fill fs-1 mb-2"></i>
                         <h5 class="fw-bold mb-0">Nova Reserva</h5>
                         <small>Cadastrar cliente agora</small>
@@ -60,10 +63,9 @@
                         <tr>
                             <th class="ps-4">Data</th>
                             <th>Cliente</th>
-                            <th>Passeio</th>
-                            <th>Valor Total</th>
+                            <th>Serviço</th>
                             <th>Sua Comissão</th>
-                            <th>Status Pagamento</th>
+                            <th>Status Financeiro</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -78,21 +80,26 @@
                                     {{ reserva.local_chegada }} (Transfer)
                                 {% endif %}
                             </td>
-                            <td>R$ {{ reserva.valor|floatformat:2 }}</td>
-                            <td class="fw-bold text-success">+ R$ {{ reserva.valor_comissao|floatformat:2 }}</td>
+                            <td class="fw-bold text-success">R$ {{ reserva.valor_comissao|floatformat:2 }}</td>
                             <td>
-                                {% if reserva.status_pagamento_comissao == 'pago' %}
-                                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Pago</span>
+                                {% if reserva.status == 'concluido' %}
+                                    {% if reserva.status_pagamento_comissao == 'pago' %}
+                                        <span class="badge bg-success rounded-pill px-3"><i class="bi bi-check-all me-1"></i> Pago via Pix</span>
+                                    {% else %}
+                                        <span class="badge bg-primary rounded-pill px-3"><i class="bi bi-stars me-1"></i> Disponível para Receber</span>
+                                    {% endif %}
+                                {% elif reserva.status == 'cancelado' %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3">Cancelada</span>
                                 {% else %}
-                                    <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3">Pendente</span>
+                                    <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3">Aguardando Serviço</span>
                                 {% endif %}
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
+                            <td colspan="5" class="text-center py-5 text-muted">
                                 <i class="bi bi-emoji-frown fs-1 d-block mb-3"></i>
-                                Nenhuma venda realizada ainda. Clique em "Nova Reserva" para começar!
+                                Nenhuma venda realizada ainda.
                             </td>
                         </tr>
                         {% endfor %}
@@ -100,7 +107,6 @@
                 </table>
             </div>
         </div>
-
     </div>
 </div>
 {% endblock %}

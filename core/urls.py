@@ -26,4 +26,5 @@ urlpatterns = [
     path('parceiro/painel/', views.painel_parceiro, name='painel_parceiro'),
     path('parceiro/nova-reserva/', views.nova_reserva_parceiro, name='nova_reserva_parceiro'),
     path('parceiro/sair/', views.logout_parceiro, name='logout_parceiro'),
+    path('dashboard/reserva/<int:reserva_id>/pagar-comissao/', views.atualizar_pagamento_comissao, name='atualizar_pagamento_comissao'),
 ]

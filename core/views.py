@@ -575,3 +575,16 @@ def logout_parceiro(request):
     logout(request)
     messages.success(request, "Você saiu com segurança.")
     return redirect('login_parceiro')
+
+@login_required
+def atualizar_pagamento_comissao(request, reserva_id):
+    # Apenas você (Staff) pode marcar como pago
+    if not request.user.is_staff:
+        return redirect('home')
+        
+    reserva = get_object_or_404(Reserva, id=reserva_id)
+    reserva.status_pagamento_comissao = 'pago'
+    reserva.save()
+    
+    messages.success(request, f"Comissão da reserva #{reserva.codigo} marcada como PAGA! ✅")
+    return redirect('detalhe_reserva', reserva_id=reserva.id)
