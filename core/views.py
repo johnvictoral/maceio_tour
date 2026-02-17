@@ -446,36 +446,32 @@ def consultar_reserva(request):
 
     return render(request, 'core/minha_reserva.html', {'reserva': reserva, 'erro': erro})
 
+# =======================================================
+# 4. ÁREA DO PARCEIRO
+# =======================================================
+
 def cadastro_parceiro(request):
     if request.method == 'POST':
         form = CadastroParceiroForm(request.POST)
         if form.is_valid():
-            # 1. Pega os dados limpos
             nome = form.cleaned_data['nome_completo']
             email = form.cleaned_data['email']
             senha = form.cleaned_data['senha']
             telefone = form.cleaned_data['telefone']
-            # REMOVIDO: pix = form.cleaned_data['chave_pix']
 
-            # 2. Cria o Usuário (Email será o Login)
             user = User.objects.create_user(username=email, email=email, password=senha)
             user.first_name = nome
             user.save()
 
-            # 3. Atualiza o perfil de Parceiro
-            # O perfil já foi criado automaticamente pelo 'signal' no models.py quando demos user.save()
             if hasattr(user, 'parceiro'):
                 parceiro = user.parceiro
                 parceiro.telefone = telefone
-                # A chave_pix continua vazia (None) por enquanto
                 parceiro.save()
 
-            # 4. Manda pro Login
             messages.success(request, "Cadastro realizado com sucesso! Acesse sua conta.")
             return redirect('login_parceiro')
     else:
         form = CadastroParceiroForm()
-
     return render(request, 'core/parceiro_cadastro.html', {'form': form})
 
 def login_parceiro(request):
@@ -483,28 +479,29 @@ def login_parceiro(request):
         email = request.POST.get('email')
         senha = request.POST.get('senha')
         user = authenticate(request, username=email, password=senha)
+        
         if user is not None:
             login(request, user)
-            return redirect('painel_parceiro')
+            if hasattr(user, 'parceiro'):
+                return redirect('painel_parceiro')
+            elif user.is_staff:
+                return redirect('/dashboard/') 
+            else:
+                return redirect('home')
         else:
             messages.error(request, "Email ou senha inválidos.")
-    
     return render(request, 'core/parceiro_login.html')
 
 @login_required(login_url='login_parceiro')
 def painel_parceiro(request):
-    # SEGURANÇA: Se for superusuário (você), ele não deve usar o painel de parceiro comum
-    # Ou, se for um usuário comum que não é parceiro, barramos o acesso.
     if not hasattr(request.user, 'parceiro'):
-        messages.error(request, "Acesso restrito a parceiros cadastrados.")
+        messages.error(request, "Acesso restrito a parceiros.")
         return redirect('home')
         
     parceiro = request.user.parceiro
-    
-    # SEGURANÇA: Garantir que o parceiro está ATIVO
     if not parceiro.ativo:
         logout(request)
-        messages.error(request, "Sua conta de parceiro está desativada. Entre em contato com o suporte.")
+        messages.error(request, "Sua conta está desativada. Fale com o John.")
         return redirect('login_parceiro')
 
     reservas = parceiro.reservas.all().order_by('-data_agendamento')
@@ -517,35 +514,6 @@ def painel_parceiro(request):
     }
     return render(request, 'core/painel_parceiro.html', context)
 
-def login_parceiro(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        senha = request.POST.get('senha')
-        user = authenticate(request, username=email, password=senha)
-        
-        if user is not None:
-            login(request, user)
-            # SE FOR PARCEIRO, vai para o painel de parceiro
-            if hasattr(user, 'parceiro'):
-                return redirect('painel_parceiro')
-            # SE FOR VOCÊ (ADMIN), vai para o dashboard geral
-            elif user.is_staff:
-                return redirect('/dashboard/') 
-            else:
-                return redirect('home')
-        else:
-            messages.error(request, "Email ou senha inválidos.")
-    
-    return render(request, 'core/parceiro_login.html')
-
-def nova_reserva_parceiro(request):
-    return HttpResponse("Em breve: Formulário de Venda")
-
-def logout_parceiro(request):
-    logout(request)
-    messages.success(request, "Você saiu com segurança. Até logo!")
-    return redirect('login_parceiro')
-
 @login_required(login_url='login_parceiro')
 def nova_reserva_parceiro(request):
     if not hasattr(request.user, 'parceiro'):
@@ -555,22 +523,25 @@ def nova_reserva_parceiro(request):
     transfers = Transfer.objects.all()
 
     if request.method == 'POST':
-        # 1. Captura dados do Cliente
         nome = request.POST.get('nome')
         sobrenome = request.POST.get('sobrenome')
-        email = request.POST.get('email')
+        email = request.POST.get('email').strip().lower()
         telefone = request.POST.get('telefone')
 
-        # Cria ou recupera o cliente pelo e-mail
-        cliente, created = Cliente.objects.get_or_create(
-            email=email,
-            defaults={'nome': nome, 'sobrenome': sobrenome, 'telefone': telefone}
-        )
+        # --- CORREÇÃO PARA EVITAR O ERRO DE 15 CLIENTES ---
+        clientes_encontrados = Cliente.objects.filter(email=email)
+        if clientes_encontrados.exists():
+            cliente = clientes_encontrados.first()
+            cliente.nome = nome
+            cliente.sobrenome = sobrenome
+            cliente.telefone = telefone
+            cliente.save()
+        else:
+            cliente = Cliente.objects.create(email=email, nome=nome, sobrenome=sobrenome, telefone=telefone)
 
-        # 2. Captura dados da Reserva
         tipo = request.POST.get('tipo')
         data_str = request.POST.get('data')
-        passageiros = request.POST.get('passageiros')
+        passageiros = int(request.POST.get('passageiros', 1))
         obs = request.POST.get('observacoes')
 
         reserva = Reserva(
@@ -583,24 +554,24 @@ def nova_reserva_parceiro(request):
             status='pendente'
         )
 
-        # Define destino e valor com base no tipo
         if tipo == 'passeio':
             praia_id = request.POST.get('praia')
-            praia = Praia.objects.get(id=praia_id)
-            reserva.praia_destino = praia
-            reserva.valor = praia.valor * int(passageiros) # Exemplo de cálculo
+            praia_obj = get_object_or_404(Praia, id=praia_id)
+            reserva.praia_destino = praia_obj
+            reserva.valor = praia_obj.valor * passageiros
         else:
             transfer_id = request.POST.get('transfer')
-            trans = Transfer.objects.get(id=transfer_id)
-            reserva.local_chegada = trans.titulo
-            reserva.valor = trans.valor
+            trans_obj = get_object_or_404(Transfer, id=transfer_id)
+            reserva.local_chegada = trans_obj.titulo
+            reserva.valor = trans_obj.valor
 
-        reserva.save() # O cálculo da comissão acontece no save() do models.py que criamos antes!
-        
-        messages.success(request, f"Reserva #{reserva.codigo} cadastrada! Aguarde a confirmação.")
+        reserva.save()
+        messages.success(request, f"Reserva #{reserva.codigo} enviada com sucesso!")
         return redirect('painel_parceiro')
 
-    return render(request, 'core/parceiro_nova_reserva.html', {
-        'praias': praias,
-        'transfers': transfers
-    })
+    return render(request, 'core/parceiro_nova_reserva.html', {'praias': praias, 'transfers': transfers})
+
+def logout_parceiro(request):
+    logout(request)
+    messages.success(request, "Você saiu com segurança.")
+    return redirect('login_parceiro')
