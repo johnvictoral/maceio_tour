@@ -540,3 +540,8 @@ def login_parceiro(request):
 
 def nova_reserva_parceiro(request):
     return HttpResponse("Em breve: Formulário de Venda")
+
+def logout_parceiro(request):
+    logout(request)
+    messages.success(request, "Você saiu com segurança. Até logo!")
+    return redirect('login_parceiro')
