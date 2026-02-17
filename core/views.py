@@ -26,7 +26,7 @@ from django.contrib.auth.models import User
 from .forms import CadastroParceiroForm # Importe o form que criamos
 
 # Adicionei 'Guia' nas importações
-from .models import ImagemCarrossel, Praia, Transfer, Depoimento, Post, Reserva, Guia
+from .models import ImagemCarrossel, Praia, Transfer, Depoimento, Post, Reserva, Guia,Cliente
 from .forms import ClientePublicoForm, ReservaPublicaForm
 from .mares_data import DADOS_MARES_2026
 
@@ -587,7 +587,7 @@ def nova_reserva_parceiro(request):
         if tipo == 'passeio':
             praia_id = request.POST.get('praia')
             praia = Praia.objects.get(id=praia_id)
-            reserva.praia_destino = beach
+            reserva.praia_destino = praia
             reserva.valor = praia.valor * int(passageiros) # Exemplo de cálculo
         else:
             transfer_id = request.POST.get('transfer')
