@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'reservas',
     'dashboard',
     'ckeditor_uploader',
+    'ckeditor',
 
 ]
 
@@ -172,3 +173,7 @@ EMAIL_USE_SSL = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'Vá com John <reservas@vacomjohn.com.br>'
+
+
+CKEDITOR_BASEPATH = "/static/ckeditor/ckeditor/"
+CKEDITOR_UPLOAD_PATH = "uploads/"
