@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'core',
     'reservas',
     'dashboard',
+    'ckeditor_uploader',
 
 ]
 
