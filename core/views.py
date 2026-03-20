@@ -39,22 +39,22 @@ def gerar_voucher_pdf(reserva):
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
-    
+
     # --- CABEÇALHO ---
     p.setFillColor(colors.darkgreen)
     p.setFont("Helvetica-Bold", 24)
     p.drawString(50, 800, "VÁ COM JOHN TURISMO")
-    
+
     p.setFillColor(colors.black)
     p.setFont("Helvetica", 12)
     p.drawString(50, 780, "Maceió - Alagoas | CNPJ: JVC Turismo")
     p.drawString(50, 765, "WhatsApp: (82) 99932-5548")
     p.line(50, 750, 550, 750)
-    
+
     # --- TÍTULO ---
     p.setFont("Helvetica-Bold", 18)
     p.drawCentredString(width/2, 720, f"VOUCHER DE CONFIRMAÇÃO #{reserva.codigo}")
-    
+
     # --- DADOS ---
     y = 680
     p.setFont("Helvetica-Bold", 14)
@@ -64,25 +64,25 @@ def gerar_voucher_pdf(reserva):
     p.drawString(50, y, f"Nome: {reserva.cliente.nome} {reserva.cliente.sobrenome}")
     p.drawString(50, y-20, f"Email: {reserva.cliente.email}")
     p.drawString(50, y-40, f"Telefone: {reserva.cliente.telefone}")
-    
+
     y -= 80
     p.setFont("Helvetica-Bold", 14)
     p.drawString(50, y, "DETALHES DO SERVIÇO")
     y -= 25
     p.setFont("Helvetica", 12)
-    
+
     servico = "Serviço Personalizado"
     if reserva.praia_destino:
         servico = f"Passeio: {reserva.praia_destino.nome}"
     elif reserva.tipo == 'transfer':
         servico = f"Transfer: {reserva.local_chegada or 'Ida/Volta'}"
-        
+
     p.drawString(50, y, f"Serviço: {servico}")
-    
+
     data_formatada = reserva.data_agendamento.strftime('%d/%m/%Y às %H:%M')
     p.drawString(50, y-20, f"Data: {data_formatada}")
     p.drawString(50, y-40, f"Passageiros: {reserva.numero_passageiros}")
-    
+
     if reserva.local_partida:
         p.drawString(50, y-60, f"Local de Saída: {reserva.local_partida}")
 
@@ -111,7 +111,7 @@ def disparar_email_confirmacao(request, reserva):
     try:
         print(f"--- PREPARANDO E-MAIL COM PDF PARA {reserva.cliente.email} ---")
         servico_nome = reserva.praia_destino.nome if reserva.praia_destino else (reserva.local_chegada or "Transfer")
-        
+
         # HTML do corpo do e-mail
         # Tenta renderizar o HTML, se não existir, usa texto simples
         try:
@@ -126,7 +126,7 @@ def disparar_email_confirmacao(request, reserva):
             html_content = f"<p>Sua reserva #{reserva.codigo} foi confirmada!</p>"
 
         text_content = strip_tags(html_content)
-        
+
         # Gera o PDF
         pdf_buffer = gerar_voucher_pdf(reserva)
         filename = f"Voucher_{reserva.codigo}.pdf"
@@ -140,7 +140,7 @@ def disparar_email_confirmacao(request, reserva):
         )
         email.attach_alternative(html_content, "text/html")
         email.attach(filename, pdf_buffer.getvalue(), 'application/pdf')
-        
+
         email.send()
         messages.success(request, f"✅ E-mail com Voucher PDF enviado para {reserva.cliente.nome}!")
         return True
@@ -159,19 +159,19 @@ def detalhe_reserva(request, reserva_id):
     guias = Guia.objects.filter(ativo=True)
 
     if request.method == 'POST':
-        
+
         # --- CASO 1: Alteração de Status (Botões Confirmar/Cancelar) ---
         if 'status' in request.POST:
             novo_status = request.POST.get('status')
             reserva.status = novo_status
             reserva.save()
-            
+
             # SE CONFIRMOU, ENVIA O EMAIL
             if novo_status == 'confirmado':
                 disparar_email_confirmacao(request, reserva)
             else:
                 messages.success(request, f"Status atualizado para {reserva.get_status_display()}!")
-            
+
             return redirect('detalhe_reserva', reserva_id=reserva.id)
 
         # --- CASO 2: Atribuir Guia (Botão Salvar Guia) ---
@@ -182,11 +182,11 @@ def detalhe_reserva(request, reserva_id):
                 reserva.guia = guia_escolhido
                 reserva.save()
                 messages.success(request, f"Guia {guia_escolhido.nome} atribuído com sucesso!")
-                
+
                 # Se a reserva JÁ ESTAVA confirmada, reenvia o voucher atualizado com o guia
                 if reserva.status == 'confirmado':
                     disparar_email_confirmacao(request, reserva)
-            
+
             return redirect('detalhe_reserva', reserva_id=reserva.id)
 
     return render(request, 'core/detalhe_reserva.html', {
@@ -204,7 +204,7 @@ def home(request):
     transfers = Transfer.objects.all()
     depoimentos = Depoimento.objects.filter(ativo=True).order_by('-id')[:3]
     posts_recentes = Post.objects.filter(status='publicado').order_by('-data_publicacao')[:3]
-    
+
     context = {
         'imagens_carrossel': imagens_carrossel,
         'praias': praias,
@@ -212,7 +212,7 @@ def home(request):
         'depoimentos': depoimentos,
         'posts_recentes': posts_recentes,
     }
-    
+
     return render(request, 'core/home.html', context)
 
 def detalhe_praia(request, slug):
@@ -233,14 +233,14 @@ def contato_view(request):
 def tabua_de_mares_view(request):
     meses_disponiveis = list(DADOS_MARES_2026.keys())
     mes_selecionado = request.GET.get('mes')
-    
+
     if not mes_selecionado:
         mes_map_num = {
             1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril', 5: 'Maio', 6: 'Junho',
             7: 'Julho', 8: 'Agosto', 9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'
         }
         mes_atual_nome = mes_map_num.get(datetime.now().month)
-        
+
         if mes_atual_nome in DADOS_MARES_2026:
             mes_selecionado = mes_atual_nome
         elif meses_disponiveis:
@@ -291,7 +291,7 @@ def detalhe_post(request, slug):
     post = get_object_or_404(Post, slug=slug, status='publicado')
     outros_posts = Post.objects.filter(status='publicado').exclude(id=post.id).order_by('-data_publicacao')[:3]
     return render(request, 'core/detalhe_post.html', {
-        'post': post, 
+        'post': post,
         'outros_posts': outros_posts
     })
 
@@ -302,10 +302,10 @@ def lista_de_posts(request):
 # --- FUNÇÃO DE ENVIAR E-MAIL INICIAL (CLIENTE SOLICITOU) ---
 def enviar_email_reserva(reserva, servico_nome):
     print(f"--- TENTANDO ENVIAR E-MAIL PARA {reserva.cliente.email} ---")
-    
+
     try:
         assunto = f'Confirmação de Reserva #{reserva.codigo} - Vá com John'
-        
+
         contexto = {
             'nome_cliente': reserva.cliente.nome,
             'codigo': reserva.codigo,
@@ -346,7 +346,7 @@ def fazer_reserva_passeio(request, praia_id):
     bloqueios = Bloqueio.objects.filter(
         Q(praia__isnull=True) | Q(praia=praia)
     ).values_list('data', flat=True)
-    
+
     # Transforma em uma lista de textos ["2026-02-12", "2026-02-15"] para o Javascript ler
     datas_bloqueadas = [b.strftime("%Y-%m-%d") for b in bloqueios]
     datas_bloqueadas_json = json.dumps(datas_bloqueadas)
@@ -355,7 +355,7 @@ def fazer_reserva_passeio(request, praia_id):
     if request.method == 'POST':
         cliente_form = ClientePublicoForm(request.POST)
         reserva_form = ReservaPublicaForm(request.POST)
-        
+
         if cliente_form.is_valid() and reserva_form.is_valid():
             cliente = cliente_form.save()
             reserva = reserva_form.save(commit=False)
@@ -365,7 +365,7 @@ def fazer_reserva_passeio(request, praia_id):
             reserva.status = 'pendente'
             reserva.valor = praia.valor if praia.valor else 0.00
             reserva.save()
-            
+
             enviar_email_reserva(reserva, praia.nome)
             messages.success(request, f"Solicitação enviada! Verifique seu e-mail.")
             return redirect('reserva_confirmada')
@@ -391,10 +391,10 @@ def fazer_reserva_transfer(request, transfer_id):
     if request.method == 'POST':
         cliente_form = ClientePublicoForm(request.POST)
         reserva_form = ReservaPublicaForm(request.POST)
-        
+
         if cliente_form.is_valid() and reserva_form.is_valid():
             cliente = cliente_form.save()
-            
+
             reserva = reserva_form.save(commit=False)
             reserva.cliente = cliente
             reserva.tipo = 'transfer'
@@ -402,9 +402,9 @@ def fazer_reserva_transfer(request, transfer_id):
             reserva.status = 'pendente'
             reserva.valor = transfer.valor
             reserva.save()
-            
+
             sucesso_email = enviar_email_reserva(reserva, f"Transfer: {transfer.titulo}")
-            
+
             if sucesso_email:
                 messages.success(request, f"Solicitação de Transfer '{transfer.titulo}' enviada! Verifique seu e-mail.")
             else:
@@ -428,15 +428,15 @@ def reserva_confirmada(request):
 def consultar_reserva(request):
     reserva = None
     erro = None
-    
+
     if request.method == 'POST':
         codigo_busca = request.POST.get('codigo', '').strip().upper().replace('#', '')
         sobrenome_busca = request.POST.get('sobrenome', '').strip()
-        
+
         if codigo_busca and sobrenome_busca:
             try:
                 reserva = Reserva.objects.get(
-                    codigo=codigo_busca, 
+                    codigo=codigo_busca,
                     cliente__sobrenome__iexact=sobrenome_busca
                 )
             except Reserva.DoesNotExist:
@@ -479,13 +479,13 @@ def login_parceiro(request):
         email = request.POST.get('email')
         senha = request.POST.get('senha')
         user = authenticate(request, username=email, password=senha)
-        
+
         if user is not None:
             login(request, user)
             if hasattr(user, 'parceiro'):
                 return redirect('painel_parceiro')
             elif user.is_staff:
-                return redirect('/dashboard/') 
+                return redirect('/dashboard/')
             else:
                 return redirect('home')
         else:
@@ -497,7 +497,7 @@ def painel_parceiro(request):
     if not hasattr(request.user, 'parceiro'):
         messages.error(request, "Acesso restrito a parceiros.")
         return redirect('home')
-        
+
     parceiro = request.user.parceiro
     if not parceiro.ativo:
         logout(request)
@@ -506,7 +506,7 @@ def painel_parceiro(request):
 
     reservas = parceiro.reservas.all().order_by('-data_agendamento')
     total_a_receber = sum(r.valor_comissao for r in reservas if r.status_pagamento_comissao == 'pendente')
-    
+
     context = {
         'parceiro': parceiro,
         'reservas': reservas,
@@ -581,11 +581,11 @@ def atualizar_pagamento_comissao(request, reserva_id):
     # Apenas você (Staff) pode marcar como pago
     if not request.user.is_staff:
         return redirect('home')
-        
+
     reserva = get_object_or_404(Reserva, id=reserva_id)
     reserva.status_pagamento_comissao = 'pago'
     reserva.save()
-    
+
     messages.success(request, f"Comissão da reserva #{reserva.codigo} marcada como PAGA! ✅")
     return redirect('detalhe_reserva', reserva_id=reserva.id)
 
@@ -593,23 +593,23 @@ def atualizar_pagamento_comissao(request, reserva_id):
 def meus_dados_parceiro(request):
     if not hasattr(request.user, 'parceiro'):
         return redirect('home')
-        
+
     parceiro = request.user.parceiro
-    
+
     if request.method == 'POST':
         nome = request.POST.get('nome')
         telefone = request.POST.get('telefone')
         chave_pix = request.POST.get('chave_pix')
-        
+
         # Atualiza o nome no usuário do Django
         request.user.first_name = nome
         request.user.save()
-        
+
         # Atualiza dados no perfil de parceiro
         parceiro.telefone = telefone
         parceiro.chave_pix = chave_pix
         parceiro.save()
-        
+
         messages.success(request, "Seus dados foram atualizados com sucesso! ✅")
         return redirect('painel_parceiro')
 
