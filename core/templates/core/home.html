@@ -44,6 +44,24 @@
     
     .btn-whatsapp-float { position: fixed; bottom: 30px; right: 30px; background: #25d366; color: white; border-radius: 50%; width: 60px; height: 60px; font-size: 30px; display: flex; align-items: center; justify-content: center; z-index: 1000; transition: transform 0.3s; }
     .btn-whatsapp-float:hover { transform: scale(1.1); color: white; }
+
+    .badge-status {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    z-index: 10;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+.bg-destaque { background: #FFD700; color: #000; }
+.bg-norte { background: #198754; color: #fff; }
+.bg-sul { background: #0dcaf0; color: #fff; }
+.bg-promocao { background: #dc3545; color: #fff; }
+.bg-privativo { background: #212529; color: #fff; }
 </style>
 
 <header class="position-relative">
@@ -86,7 +104,15 @@
           <div class="card card-hover h-100 shadow-sm rounded-4 position-relative">
             <div class="overflow-hidden position-relative rounded-top-4" style="height: 250px;">
                 <img src="{{ praia.imagem.url }}" class="card-img-top card-img-zoom w-100 h-100" style="object-fit: cover;">
-                <div class="price-badge"><i class="bi bi-geo-alt-fill text-danger"></i> Litoral</div>
+                <div class="badge-status 
+                    {% if praia.tipo_etiqueta == 'destaque' %}bg-destaque
+                    {% elif praia.tipo_etiqueta == 'sul' %}bg-sul
+                    {% elif praia.tipo_etiqueta == 'promocao' %}bg-promocao
+                    {% elif praia.tipo_etiqueta == 'privativo' %}bg-privativo
+                    {% else %}bg-norte{% endif %}">
+
+                    {{ praia.get_tipo_etiqueta_display }}
+                </div>
             </div>
             <div class="card-body p-4 d-flex flex-column">
               <h4 class="card-title fw-bold mb-2">{{ praia.nome }}</h4>

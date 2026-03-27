@@ -22,9 +22,6 @@
                                 <li><strong>{{ field.label }}:</strong> {{ error }}</li>
                             {% endfor %}
                         {% endfor %}
-                        {% for error in form.non_field_errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
                         </ul>
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
@@ -36,11 +33,17 @@
                     </div>
                     
                     <div class="row mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">Valor</label>
                             {{ form.valor }}
                         </div>
-                        <div class="col-md-6 d-flex align-items-center mt-4">
+                        
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Selo (Etiqueta)</label>
+                            {{ form.tipo_etiqueta }}
+                        </div>
+
+                        <div class="col-md-4 d-flex align-items-center mt-4">
                             <div class="form-check form-switch">
                                 {{ form.ativo }}
                                 <label class="form-check-label ms-2">Disponível no Site?</label>

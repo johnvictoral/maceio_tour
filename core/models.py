@@ -53,18 +53,36 @@ class Guia(models.Model):
         return self.nome
 
 class Praia(models.Model):
+    # Opções que aparecerão no seu Dashboard
+    OPCOES_ETIQUETA = [
+        ('norte', '🌴 Litoral Norte'),
+        ('sul', '🌊 Litoral Sul'),
+        ('destaque', '⭐ Mais Procurado'),
+        ('promocao', '🔥 Oferta Especial'),
+        ('privativo', '🚗 Passeio Privativo'),
+    ]
+
     nome = models.CharField(max_length=100)
     descricao_curta = models.CharField(max_length=255)
-    descricao_longa = RichTextField("Descrição Completa", blank=True, null=True) # CKEditor
+    descricao_longa = RichTextField("Descrição Completa", blank=True, null=True)
     imagem = models.ImageField(upload_to='praias/')
     slug = models.SlugField(unique=True, help_text="URL amigável, ex: praia-do-gunga")
     valor = models.DecimalField(max_digits=7, decimal_places=2, help_text="Valor do passeio por pessoa", default=0.00)
     ativo = models.BooleanField(default=True)
+    
+    # NOVO CAMPO: Escolha da Etiqueta
+    tipo_etiqueta = models.CharField(
+        max_length=20, 
+        choices=OPCOES_ETIQUETA, 
+        default='norte',
+        verbose_name="Selo do Card"
+    )
 
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.nome) 
         super().save(*args, **kwargs)
+
     def __str__(self):
         return self.nome
 

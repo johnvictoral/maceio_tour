@@ -134,13 +134,15 @@ class ReservaManualForm(forms.Form):
 class PraiaForm(forms.ModelForm):
     class Meta:
         model = Praia
-        # CORREÇÃO: Usar 'descricao_longa' em vez de 'descricao_completa'
-        fields = ['nome', 'descricao_curta', 'descricao_longa', 'imagem', 'valor', 'ativo']
+        # ADICIONADO: 'tipo_etiqueta' na lista de campos
+        fields = ['nome', 'descricao_curta', 'descricao_longa', 'tipo_etiqueta', 'imagem', 'valor', 'ativo']
+        
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
             'descricao_curta': forms.TextInput(attrs={'class': 'form-control'}),
-            # CORREÇÃO AQUI TAMBÉM NO WIDGET:
             'descricao_longa': CKEditorWidget(),
+            # ADICIONADO: Estilo para o seletor da etiqueta
+            'tipo_etiqueta': forms.Select(attrs={'class': 'form-select'}), 
             'imagem': forms.FileInput(attrs={'class': 'form-control'}),
             'valor': forms.NumberInput(attrs={'class': 'form-control'}),
             'ativo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
