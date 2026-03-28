@@ -34,8 +34,14 @@ class Parceiro(models.Model):
 class Cliente(models.Model):
     nome = models.CharField(max_length=100)
     sobrenome = models.CharField(max_length=100)
-    email = models.EmailField(blank=True, null=True)
+    email = models.EmailField(blank=True, null=True) # Tirei o unique=True para não travar
     telefone = models.CharField(max_length=20)
+    # --- NOVOS CAMPOS ---
+    cpf = models.CharField(max_length=14, blank=True, null=True, verbose_name="CPF")
+    data_nascimento = models.DateField(blank=True, null=True, verbose_name="Data de Nascimento")
+    endereco = models.CharField(max_length=255, blank=True, null=True, verbose_name="Endereço/Hotel")
+    cidade_origem = models.CharField(max_length=100, blank=True, null=True, verbose_name="Cidade de Origem")
+    observacoes_gerais = models.TextField(blank=True, null=True, verbose_name="Notas sobre o Cliente")
     data_cadastro = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -236,3 +242,52 @@ def criar_perfil_parceiro(sender, instance, created, **kwargs):
     # Só cria perfil de parceiro se NÃO for superusuário e NÃO for staff
     if created and not instance.is_superuser and not instance.is_staff:
         Parceiro.objects.get_or_create(usuario=instance)
+
+# No seu models.py
+class Negociacao(models.Model):
+    STATUS_CHOICES = [
+        ('novo', 'Novo Lead (Site)'),
+        ('contato', 'Em Contato/Zap'),
+        ('orcamento', 'Orçamento Enviado'),
+        ('fechado', 'Venda Concluída'),
+        ('perdido', 'Perdido'),
+    ]
+    
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    praia_interesse = models.ForeignKey(Praia, on_delete=models.SET_NULL, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='novo')
+    valor_estimado = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    data_atualizacao = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.cliente.nome} - {self.get_status_display()}"
+    
+class Lead(models.Model):
+    # 1º: Defina as listas de opções (Choices)
+    STATUS_CHOICES = [
+        ('novo', 'Novo Lead'),
+        ('contato', 'Em Contato'),
+        ('orcamento', 'Orçamento Enviado'),
+        ('fechado', 'Venda Concluída'),
+        ('perdido', 'Perdido'),
+    ]
+
+    CATEGORIA_CHOICES = [
+        ('passeio', 'Passeio'),
+        ('transfer', 'Transfer'),
+        ('pacote', 'Pacote Completo'),
+    ]
+    
+    # 2º: Agora sim, use elas nos campos
+    cliente = models.ForeignKey('Cliente', on_delete=models.CASCADE)
+    praia_interesse = models.ForeignKey('Praia', on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='novo')
+    categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES, default='passeio') # Agora ele vai achar!
+    
+    valor_proposto = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    observacoes = models.TextField(blank=True, null=True)
+    data_criacao = models.DateTimeField(auto_now_add=True)
+    data_atualizacao = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.cliente.nome} - {self.get_status_display()}"

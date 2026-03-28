@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
+import json
 import base64
 import os
 import io # <--- IMPORTANTE PARA O PDF NOVO
-import datetime
+from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -16,8 +17,10 @@ from django.contrib.auth.views import LoginView
 from django.utils.text import slugify
 from django.utils.html import strip_tags # <--- IMPORTANTE PARA EMAIL
 from django.core.mail import EmailMultiAlternatives # <--- IMPORTANTE PARA ANEXO
+from django.views.decorators.csrf import csrf_exempt
 from core.models import Bloqueio # <--- Não esqueça de importar
 from .forms import BloqueioForm # <--- E o formulário
+
 
 from weasyprint import HTML
 
@@ -43,6 +46,7 @@ from .forms import (
 
 # Seus modelos
 from core.models import Reserva, Cliente, Praia, Guia, ImagemCarrossel, Depoimento, Post, Transfer
+from core.models import Lead
 from .utils import render_to_pdf
 
 # =======================================================
@@ -182,7 +186,7 @@ def painel(request):
     dados_grafico = []
     labels_grafico = []
     for i in range(5, -1, -1):
-        data_ref = hoje - datetime.timedelta(days=i*30)
+        data_ref = hoje - timedelta(days=i*30)
         fat_mensal = Reserva.objects.filter(
             data_agendamento__month=data_ref.month,
             data_agendamento__year=data_ref.year,
@@ -871,3 +875,106 @@ def excluir_bloqueio(request, bloqueio_id):
     bloqueio.delete()
     messages.success(request, 'Data desbloqueada (liberada)!')
     return redirect('gerenciar_bloqueios')
+
+def funil_vendas(request):
+    if request.method == 'POST':
+        # 1. Pega os dados do formulário
+        cliente_id = request.POST.get('cliente')
+        categoria = request.POST.get('categoria')
+        valor = request.POST.get('valor') or 0
+        observacao = request.POST.get('obs')
+
+        # 2. Salva o Lead no banco de dados
+        Lead.objects.create(
+            cliente_id=cliente_id,
+            categoria=categoria,
+            valor_proposto=valor,
+            observacoes=observacao,
+            status='novo'
+        )
+        return redirect('funil_vendas')
+
+    # --- FORA DO IF (Para carregar a página sempre) ---
+
+    # 3. Busca os leads filtrados por status
+    col_novos = Lead.objects.filter(status='novo')
+    col_contato = Lead.objects.filter(status='contato')
+    col_orcamento = Lead.objects.filter(status='orcamento')
+    col_fechado = Lead.objects.filter(status='fechado')
+
+    # 4. Envia tudo para o HTML
+    context = {
+        'col_novos': col_novos,
+        'col_contato': col_contato,
+        'col_orcamento': col_orcamento,
+        'col_fechado': col_fechado,
+        'todos_clientes': Cliente.objects.all(),
+    }
+    return render(request, 'dashboard/funil.html', context)
+
+@csrf_exempt # Para permitir que o JavaScript envie dados sem erro de segurança
+def atualizar_status_lead(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            lead_id = data.get('id')
+            novo_status = data.get('status')
+            
+            lead = Lead.objects.get(id=lead_id)
+            lead.status = novo_status
+            lead.save()
+            
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'invalid_method'})
+
+def excluir_lead(request, lead_id):
+    # Procura o lead pelo ID ou dá erro 404 se não existir
+    lead = get_object_or_404(Lead, id=lead_id)
+    
+    # Deleta do banco de dados
+    lead.delete()
+    
+    # Volta para a tela do funil atualizada
+    return redirect('funil_vendas')
+
+def editar_lead(request, lead_id):
+    if request.method == 'POST':
+        lead = get_object_or_404(Lead, id=lead_id)
+        
+        # 1. Pega a nova anotação do formulário
+        nova_nota = request.POST.get('obs_nova')
+        novo_valor = request.POST.get('valor')
+
+        # 2. Atualiza o valor se ele foi enviado
+        if novo_valor:
+            lead.valor_proposto = novo_valor
+
+        # 3. Lógica do Histórico: Soma a nota nova à antiga com Data/Hora
+        if nova_nota and nova_nota.strip():
+            data_hora = datetime.now().strftime('%d/%m %H:%M')
+            
+            # Se já existir algo, pula linha, senão começa do zero
+            if lead.observacoes:
+                lead.observacoes = f"{lead.observacoes}\n[{data_hora}]: {nova_nota}"
+            else:
+                lead.observacoes = f"[{data_hora}]: {nova_nota}"
+        
+        # 4. Salva no banco de dados
+        lead.save()
+        
+    # 5. Volta para o funil atualizado
+    return redirect('funil_vendas')
+
+@login_required
+def detalhe_cliente(request, cliente_id):
+    cliente = get_object_or_404(Cliente, id=cliente_id)
+    # Busca todo o histórico de passeios e transfers deste cliente
+    historico_reservas = Reserva.objects.filter(cliente=cliente).order_by('-data_agendamento')
+    
+    context = {
+        'cliente': cliente,
+        'reservas': historico_reservas
+    }
+    return render(request, 'dashboard/detalhe_cliente.html', context)

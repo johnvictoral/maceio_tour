@@ -1,0 +1,209 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block dashboard_content %}
+<style>
+    .kanban-column { min-height: 80vh; background-color: #f4f5f7; border-radius: 12px; border-top: 5px solid #ddd; }
+    .kanban-drag-area { min-height: 250px; padding: 10px; }
+    .card-kanban { cursor: grab; border-left: 5px solid #0d6efd; transition: all 0.2s; position: relative; border-radius: 8px; }
+    .card-kanban:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .bg-purple-light { background-color: #f3e5f5; color: #7b1fa2; border: 1px solid #e1bee7; }
+    .bg-blue-light { background-color: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb; }
+    .btn-delete-lead { position: absolute; top: 8px; right: 10px; color: #dc3545; opacity: 0.3; transition: 0.3s; z-index: 10; text-decoration: none; }
+    .card-kanban:hover .btn-delete-lead { opacity: 1; }
+</style>
+
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h4 fw-bold mb-0"><i class="bi bi-funnel-fill text-primary me-2"></i>Gestão JVC Turismo</h2>
+        <button class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalNovoLead">
+            <i class="bi bi-plus-lg me-1"></i> NOVO ATENDIMENTO
+        </button>
+    </div>
+
+    <div class="d-flex flex-row overflow-auto gap-3 pb-5">
+        
+        <div class="kanban-column shadow-sm border-primary" style="min-width: 300px;">
+            <div class="p-3 border-bottom bg-white rounded-top mb-2 fw-bold small text-muted">🆕 NOVOS ({{ col_novos.count }})</div>
+            <div id="col-novo" class="list-group kanban-drag-area" data-status="novo">
+                {% for lead in col_novos %}
+                    <div class="card card-kanban mb-3 shadow-sm border-0" data-id="{{ lead.id }}" 
+                         style="border-left-color: {% if lead.categoria == 'transfer' %}#6f42c1{% else %}#0d6efd{% endif %};">
+                        <div class="card-body p-3">
+                            <a href="{% url 'excluir_lead' lead.id %}" onclick="return confirm('Apagar lead?')" class="btn-delete-lead"><i class="bi bi-trash"></i></a>
+                            <div data-bs-toggle="modal" data-bs-target="#modalEditar{{ lead.id }}" style="cursor: pointer;">
+                                <h6 class="mb-1 fw-bold text-dark pe-4" style="font-size: 0.9rem;">{{ lead.cliente.nome }} {{ lead.cliente.sobrenome }}</h6>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="badge {% if lead.categoria == 'transfer' %}bg-purple-light{% else %}bg-blue-light{% endif %}" style="font-size: 0.7rem;">
+                                        {% if lead.categoria == 'transfer' %}🚗 Transfer{% else %}🚢 Passeio{% endif %}
+                                    </small>
+                                    <span class="fw-bold text-success" style="font-size: 0.85rem;">R$ {{ lead.valor_proposto }}</span>
+                                </div>
+                                {% if lead.observacoes %}
+                                    <div class="mt-2 pt-2 border-top border-light text-muted small" style="font-size: 0.7rem;">{{ lead.observacoes|truncatechars:45 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal fade" id="modalEditar{{ lead.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog"><div class="modal-content border-0">
+                            <div class="modal-header bg-dark text-white p-2 px-3"><h6 class="modal-title small">Anotações: {{ lead.cliente.nome }}</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                            <form action="{% url 'editar_lead' lead.id %}" method="POST">{% csrf_token %}
+                                <div class="modal-body p-3">
+                                    <label class="fw-bold small text-muted mb-1">HISTÓRICO:</label>
+                                    <div class="bg-light p-2 mb-3 rounded border" style="max-height: 150px; overflow-y: auto; font-size: 0.8rem; white-space: pre-wrap;">{{ lead.observacoes|default:"Sem notas." }}</div>
+                                    <label class="form-label fw-bold small text-primary">NOVA ATUALIZAÇÃO:</label>
+                                    <textarea name="obs_nova" class="form-control form-control-sm border-primary" rows="3"></textarea>
+                                </div>
+                                <div class="modal-footer p-2"><button type="submit" class="btn btn-success btn-sm w-100 fw-bold">SALVAR</button></div>
+                            </form>
+                        </div></div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="kanban-column shadow-sm border-success" style="min-width: 300px;">
+            <div class="p-3 border-bottom bg-white rounded-top mb-2 fw-bold small text-muted">💬 CONTATO ({{ col_contato.count }})</div>
+            <div id="col-contato" class="list-group kanban-drag-area" data-status="contato">
+                {% for lead in col_contato %}
+                    <div class="card card-kanban mb-3 shadow-sm border-0" data-id="{{ lead.id }}" 
+                         style="border-left-color: {% if lead.categoria == 'transfer' %}#6f42c1{% else %}#0d6efd{% endif %};">
+                        <div class="card-body p-3">
+                            <a href="{% url 'excluir_lead' lead.id %}" onclick="return confirm('Apagar lead?')" class="btn-delete-lead"><i class="bi bi-trash"></i></a>
+                            <div data-bs-toggle="modal" data-bs-target="#modalEditar{{ lead.id }}" style="cursor: pointer;">
+                                <h6 class="mb-1 fw-bold text-dark pe-4" style="font-size: 0.9rem;">{{ lead.cliente.nome }} {{ lead.cliente.sobrenome }}</h6>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="badge {% if lead.categoria == 'transfer' %}bg-purple-light{% else %}bg-blue-light{% endif %}" style="font-size: 0.7rem;">
+                                        {% if lead.categoria == 'transfer' %}🚗 Transfer{% else %}🚢 Passeio{% endif %}
+                                    </small>
+                                    <span class="fw-bold text-success" style="font-size: 0.85rem;">R$ {{ lead.valor_proposto }}</span>
+                                </div>
+                                {% if lead.observacoes %}<div class="mt-2 pt-2 border-top border-light text-muted small" style="font-size: 0.7rem;">{{ lead.observacoes|truncatechars:45 }}</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal fade" id="modalEditar{{ lead.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog"><div class="modal-content border-0">
+                            <div class="modal-header bg-dark text-white p-2 px-3"><h6 class="modal-title small">Anotações: {{ lead.cliente.nome }}</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                            <form action="{% url 'editar_lead' lead.id %}" method="POST">{% csrf_token %}
+                                <div class="modal-body p-3">
+                                    <label class="fw-bold small text-muted mb-1">HISTÓRICO:</label>
+                                    <div class="bg-light p-2 mb-3 rounded border" style="max-height: 150px; overflow-y: auto; font-size: 0.8rem; white-space: pre-wrap;">{{ lead.observacoes|default:"Sem notas." }}</div>
+                                    <label class="form-label fw-bold small text-primary">NOVA ATUALIZAÇÃO:</label>
+                                    <textarea name="obs_nova" class="form-control form-control-sm border-primary" rows="3"></textarea>
+                                </div>
+                                <div class="modal-footer p-2"><button type="submit" class="btn btn-success btn-sm w-100 fw-bold">SALVAR</button></div>
+                            </form>
+                        </div></div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="kanban-column shadow-sm border-warning" style="min-width: 300px;">
+            <div class="p-3 border-bottom bg-white rounded-top mb-2 fw-bold small text-muted">📄 ORÇAMENTO ({{ col_orcamento.count }})</div>
+            <div id="col-orcamento" class="list-group kanban-drag-area" data-status="orcamento">
+                {% for lead in col_orcamento %}
+                    <div class="card card-kanban mb-3 shadow-sm border-0" data-id="{{ lead.id }}" 
+                         style="border-left-color: {% if lead.categoria == 'transfer' %}#6f42c1{% else %}#0d6efd{% endif %};">
+                        <div class="card-body p-3">
+                            <a href="{% url 'excluir_lead' lead.id %}" onclick="return confirm('Apagar lead?')" class="btn-delete-lead"><i class="bi bi-trash"></i></a>
+                            <div data-bs-toggle="modal" data-bs-target="#modalEditar{{ lead.id }}" style="cursor: pointer;">
+                                <h6 class="mb-1 fw-bold text-dark pe-4" style="font-size: 0.9rem;">{{ lead.cliente.nome }} {{ lead.cliente.sobrenome }}</h6>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="badge {% if lead.categoria == 'transfer' %}bg-purple-light{% else %}bg-blue-light{% endif %}" style="font-size: 0.7rem;">
+                                        {% if lead.categoria == 'transfer' %}🚗 Transfer{% else %}🚢 Passeio{% endif %}
+                                    </small>
+                                    <span class="fw-bold text-success" style="font-size: 0.85rem;">R$ {{ lead.valor_proposto }}</span>
+                                </div>
+                                {% if lead.observacoes %}<div class="mt-2 pt-2 border-top border-light text-muted small" style="font-size: 0.7rem;">{{ lead.observacoes|truncatechars:45 }}</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal fade" id="modalEditar{{ lead.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog"><div class="modal-content border-0">
+                            <div class="modal-header bg-dark text-white p-2 px-3"><h6 class="modal-title small">Anotações: {{ lead.cliente.nome }}</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                            <form action="{% url 'editar_lead' lead.id %}" method="POST">{% csrf_token %}
+                                <div class="modal-body p-3">
+                                    <label class="fw-bold small text-muted mb-1">HISTÓRICO:</label>
+                                    <div class="bg-light p-2 mb-3 rounded border" style="max-height: 150px; overflow-y: auto; font-size: 0.8rem; white-space: pre-wrap;">{{ lead.observacoes|default:"Sem notas." }}</div>
+                                    <label class="form-label fw-bold small text-primary">NOVA ATUALIZAÇÃO:</label>
+                                    <textarea name="obs_nova" class="form-control form-control-sm border-primary" rows="3"></textarea>
+                                </div>
+                                <div class="modal-footer p-2"><button type="submit" class="btn btn-success btn-sm w-100 fw-bold">SALVAR</button></div>
+                            </form>
+                        </div></div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="kanban-column shadow-sm border-info" style="min-width: 300px;">
+            <div class="p-3 border-bottom bg-white rounded-top mb-2 fw-bold small text-muted">✅ FECHADO ({{ col_fechado.count }})</div>
+            <div id="col-fechado" class="list-group kanban-drag-area" data-status="fechado">
+                {% for lead in col_fechado %}
+                    <div class="card card-kanban mb-3 shadow-sm border-0" data-id="{{ lead.id }}" 
+                         style="border-left-color: {% if lead.categoria == 'transfer' %}#6f42c1{% else %}#0d6efd{% endif %};">
+                        <div class="card-body p-3">
+                            <a href="{% url 'excluir_lead' lead.id %}" onclick="return confirm('Apagar lead?')" class="btn-delete-lead"><i class="bi bi-trash"></i></a>
+                            <div data-bs-toggle="modal" data-bs-target="#modalEditar{{ lead.id }}" style="cursor: pointer;">
+                                <h6 class="mb-1 fw-bold text-dark pe-4" style="font-size: 0.9rem;">{{ lead.cliente.nome }} {{ lead.cliente.sobrenome }}</h6>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="badge {% if lead.categoria == 'transfer' %}bg-purple-light{% else %}bg-blue-light{% endif %}" style="font-size: 0.7rem;">
+                                        {% if lead.categoria == 'transfer' %}🚗 Transfer{% else %}🚢 Passeio{% endif %}
+                                    </small>
+                                    <span class="fw-bold text-success" style="font-size: 0.85rem;">R$ {{ lead.valor_proposto }}</span>
+                                </div>
+                                {% if lead.observacoes %}<div class="mt-2 pt-2 border-top border-light text-muted small" style="font-size: 0.7rem;">{{ lead.observacoes|truncatechars:45 }}</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal fade" id="modalEditar{{ lead.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog"><div class="modal-content border-0">
+                            <div class="modal-header bg-dark text-white p-2 px-3"><h6 class="modal-title small">Anotações: {{ lead.cliente.nome }}</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                            <form action="{% url 'editar_lead' lead.id %}" method="POST">{% csrf_token %}
+                                <div class="modal-body p-3">
+                                    <label class="fw-bold small text-muted mb-1">HISTÓRICO:</label>
+                                    <div class="bg-light p-2 mb-3 rounded border" style="max-height: 150px; overflow-y: auto; font-size: 0.8rem; white-space: pre-wrap;">{{ lead.observacoes|default:"Sem notas." }}</div>
+                                    <label class="form-label fw-bold small text-primary">NOVA ATUALIZAÇÃO:</label>
+                                    <textarea name="obs_nova" class="form-control form-control-sm border-primary" rows="3"></textarea>
+                                </div>
+                                <div class="modal-footer p-2"><button type="submit" class="btn btn-success btn-sm w-100 fw-bold">SALVAR</button></div>
+                            </form>
+                        </div></div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNovoLead" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-primary text-white p-2 px-3"><h6 class="modal-title fw-bold">Novo Lead - JVC</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <form method="POST">{% csrf_token %}<div class="modal-body p-3">
+                    <div class="mb-3"><label class="form-label fw-bold small">CLIENTE</label><select name="cliente" class="form-select border-primary" required><option value="">Selecione...</option>{% for c in todos_clientes %}<option value="{{ c.id }}">{{ c.nome }} {{ c.sobrenome }}</option>{% endfor %}</select></div>
+                    <div class="row mb-3"><div class="col-6"><label class="form-label fw-bold small">SERVIÇO</label><select name="categoria" class="form-select"><option value="passeio">🚢 Passeio</option><option value="transfer">🚗 Transfer</option></select></div><div class="col-6"><label class="form-label fw-bold small">VALOR (R$)</label><input type="number" step="0.01" name="valor" class="form-control"></div></div>
+                    <textarea name="obs" class="form-control" rows="2" placeholder="Notas iniciais..."></textarea></div><div class="modal-footer p-2"><button type="submit" class="btn btn-primary w-100 fw-bold">CRIAR NO FUNIL</button></div></form></div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+    document.querySelectorAll('.kanban-drag-area').forEach(el => {
+        new Sortable(el, {
+            group: 'leads',
+            animation: 150,
+            onEnd: function (evt) {
+                const leadId = evt.item.dataset.id;
+                const novoStatus = evt.to.dataset.status;
+                fetch("{% url 'atualizar_status_lead' %}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: JSON.stringify({ id: leadId, status: novoStatus })
+                })
+                .then(response => response.json())
+                .then(data => { if (data.status !== 'success') { window.location.reload(); } });
+            }
+        });
+    });
+</script>
+{% endblock %}

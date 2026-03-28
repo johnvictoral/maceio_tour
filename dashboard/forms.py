@@ -151,12 +151,20 @@ class PraiaForm(forms.ModelForm):
 class ClienteForm(forms.ModelForm):
     class Meta:
         model = Cliente
-        fields = ['nome', 'sobrenome', 'email', 'telefone'] # Ajuste conforme seu model
+        fields = [
+            'nome', 'sobrenome', 'email', 'telefone', 
+            'cpf', 'data_nascimento', 'cidade_origem', 'endereco', 
+            'observacoes_gerais' # <-- VERIFIQUE SE ESTA LINHA ESTÁ AQUI
+        ]
         widgets = {
-            'nome': forms.TextInput(attrs={'class': 'form-control'}),
-            'sobrenome': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'telefone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(XX) XXXXX-XXXX'}),
+            'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome'}),
+            'sobrenome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Sobrenome'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'email@exemplo.com'}),
+            'telefone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(82) 99999-9999'}),
+            'cpf': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '000.000.000-00'}),
+            'data_nascimento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'cidade_origem': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: São Paulo - SP'}),
+            'endereco': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Hotel ou Endereço Residencial'}),
         }
 
 class DepoimentoForm(forms.ModelForm):

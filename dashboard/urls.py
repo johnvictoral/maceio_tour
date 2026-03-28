@@ -67,4 +67,11 @@ path('financeiro/comprovante/<int:reserva_id>/', views.gerar_recibo_financeiro, 
 
 path('bloqueios/', views.gerenciar_bloqueios, name='gerenciar_bloqueios'),
 path('bloqueios/excluir/<int:bloqueio_id>/', views.excluir_bloqueio, name='excluir_bloqueio'),
+
+path('funil/', views.funil_vendas, name='funil_vendas'),
+    path('funil/atualizar-status/', views.atualizar_status_lead, name='atualizar_status_lead'),
+
+    path('funil/excluir/<int:lead_id>/', views.excluir_lead, name='excluir_lead'),
+    path('funil/editar/<int:lead_id>/', views.editar_lead, name='editar_lead'),
+    path('clientes/<int:cliente_id>/', views.detalhe_cliente, name='detalhe_cliente'),
 ]
