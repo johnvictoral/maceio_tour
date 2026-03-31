@@ -12,10 +12,13 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
-from decouple import config
+from decouple import Config, RepositoryEnv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+env_path = os.path.join(BASE_DIR, '.env')
+config = Config(RepositoryEnv(env_path))
 
 
 # Quick-start development settings - unsuitable for production
@@ -172,7 +175,7 @@ EMAIL_PORT = 465
 EMAIL_USE_SSL = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = 'Marevo Turismo <contato@marevoturismo.com.br>'
+DEFAULT_FROM_EMAIL = f"Marevo Turismo <{config('EMAIL_HOST_USER')}>"
 
 
 CKEDITOR_BASEPATH = "/static/ckeditor/ckeditor/"
