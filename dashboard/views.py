@@ -527,7 +527,7 @@ def nova_reserva_manual(request):
                 numero_passageiros=dados['numero_passageiros'],
                 valor=dados['valor'],
                 informacoes_voo=dados['informacoes_voo'],
-                status='confirmado'
+                status='pendente'
             )
 
             if dados['tipo_servico'] == 'passeio':
