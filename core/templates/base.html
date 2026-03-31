@@ -165,9 +165,7 @@
                 </ul>
                 
                 <div class="d-flex gap-2 ms-lg-3 flex-wrap justify-content-center mt-3 mt-lg-0">
-                    <a href="{% url 'login_parceiro' %}" class="btn btn-brand-teal shadow-sm btn-sm px-3">
-                        <i class="bi bi-briefcase-fill me-1"></i> Seja Parceiro
-                    </a>
+                    
 
                     {% if user.is_authenticated %}
                         <a href="{% url 'painel' %}" class="btn btn-outline-dark btn-sm">
