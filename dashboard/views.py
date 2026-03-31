@@ -633,6 +633,16 @@ def lista_clientes(request):
     return render(request, 'dashboard/lista_clientes.html', {'clientes': clientes})
 
 @login_required
+def excluir_cliente(request, cliente_id):
+    cliente = get_object_or_404(Cliente, id=cliente_id)
+    # Antes de deletar, o Django remove o cliente. 
+    # Se ele tiver reservas, o 'on_delete=models.CASCADE' no seu models.py 
+    # vai apagar as reservas dele também.
+    cliente.delete()
+    messages.success(request, 'Cliente removido com sucesso!')
+    return redirect('lista_clientes')
+
+@login_required
 def gerar_voucher(request, reserva_id):
     reserva = get_object_or_404(Reserva, id=reserva_id)
     data = {

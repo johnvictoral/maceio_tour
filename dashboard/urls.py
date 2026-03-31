@@ -28,6 +28,7 @@ urlpatterns = [
     # Clientes (Adicione as de cadastro/edição)
     path('clientes/novo/', views.novo_cliente, name='novo_cliente'),
     path('clientes/editar/<int:cliente_id>/', views.editar_cliente, name='editar_cliente'),
+    path('dashboard/clientes/excluir/<int:cliente_id>/', views.excluir_cliente, name='excluir_cliente'),
     # dashboard/urls.py
     path('clientes/', views.lista_clientes, name='lista_clientes'),
     path('voucher/<int:reserva_id>/', views.gerar_voucher, name='gerar_voucher'),

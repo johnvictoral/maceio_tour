@@ -4,7 +4,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h3 class="fw-bold text-dark mb-0">Meus Clientes</h3>
-        <p class="text-muted small mb-0">Gerencie sua base de contatos da JVC Turismo.</p>
+        <p class="text-muted small mb-0">Gerencie sua base de contatos da Marevo Turismo.</p>
     </div>
     <a href="{% url 'novo_cliente' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
         <i class="bi bi-person-plus-fill me-1"></i> Novo Cliente
@@ -49,13 +49,19 @@
                     <td><span class="badge bg-light text-dark border">{{ cliente.cidade_origem|default:"Não inf." }}</span></td>
                     <td><small class="text-muted">{{ cliente.data_cadastro|date:"d/m/Y" }}</small></td>
                     <td class="text-end pe-4">
-                        <a href="{% url 'detalhe_cliente' cliente.id %}" class="btn btn-sm btn-light rounded-circle text-info" title="Ver Perfil">
-                            <i class="bi bi-eye-fill"></i>
-                        </a>
-                        <a href="{% url 'editar_cliente' cliente_id=cliente.id %}" class="btn btn-sm btn-light rounded-circle text-primary" title="Editar">
-                            <i class="bi bi-pencil-fill"></i>
-                        </a>
-                    </td>
+    <a href="{% url 'detalhe_cliente' cliente.id %}" class="btn btn-sm btn-light rounded-circle text-info" title="Ver Perfil">
+        <i class="bi bi-eye-fill"></i>
+    </a>
+    <a href="{% url 'editar_cliente' cliente_id=cliente.id %}" class="btn btn-sm btn-light rounded-circle text-primary" title="Editar">
+        <i class="bi bi-pencil-fill"></i>
+    </a>
+    
+    <a href="javascript:void(0)" 
+       onclick="if(confirm('Deseja realmente excluir o cliente {{ cliente.nome }}?')) { window.location.href='{% url 'excluir_cliente' cliente.id %}'; }" 
+       class="btn btn-sm btn-light rounded-circle text-danger" title="Excluir">
+        <i class="bi bi-trash-fill"></i>
+    </a>
+</td>
                 </tr>
                 {% empty %}
                 <tr>
