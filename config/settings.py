@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-dn@j09qr-2=6=sa26z_-li*yt$_gr)cxial#an8@#za#zewn9m
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*'] 
+ALLOWED_HOSTS = ['marevoturismo.com.br', 'www.marevoturismo.com.br', '76.13.236.55', 'vacomjohn.com.br'] 
 # Ou, se já souber seu usuário: ['seu_usuario.pythonanywhere.com', '127.0.0.1']
 
 
@@ -172,7 +172,7 @@ EMAIL_PORT = 465
 EMAIL_USE_SSL = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = 'Vá com John <reservas@vacomjohn.com.br>'
+DEFAULT_FROM_EMAIL = 'Marevo Turismo <reservas@vacomjohn.com.br>'
 
 
 CKEDITOR_BASEPATH = "/static/ckeditor/ckeditor/"
