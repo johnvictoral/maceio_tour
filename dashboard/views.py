@@ -249,7 +249,12 @@ def detalhe_reserva(request, reserva_id):
                 
                 # NOVO: SE CONFIRMOU, DISPARA O E-MAIL
                 if novo_status == 'confirmado':
-                    disparar_email_confirmacao(request, reserva)
+                    print(f"DEBUG: Tentando enviar e-mail para {reserva.cliente.email}")
+                    enviado = disparar_email_confirmacao(request, reserva)
+                    if enviado:
+                        messages.success(request, f"Reserva confirmada e Voucher enviado para {reserva.cliente.nome}!")
+                    else:
+                        messages.error(request, "Status atualizado, mas houve um erro no servidor de e-mail.")
                 else:
                     messages.success(request, f"Status atualizado para {reserva.get_status_display()}!")
                 

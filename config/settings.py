@@ -172,7 +172,7 @@ EMAIL_PORT = 465
 EMAIL_USE_SSL = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = 'Marevo Turismo <reservas@vacomjohn.com.br>'
+DEFAULT_FROM_EMAIL = 'Marevo Turismo <contato@marevo.com.brr>'
 
 
 CKEDITOR_BASEPATH = "/static/ckeditor/ckeditor/"
