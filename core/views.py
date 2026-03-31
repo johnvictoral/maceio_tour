@@ -430,19 +430,17 @@ def consultar_reserva(request):
     erro = None
 
     if request.method == 'POST':
+        # Pegamos o código, limpamos espaços, colocamos em maiúsculo e removemos o '#' se houver
         codigo_busca = request.POST.get('codigo', '').strip().upper().replace('#', '')
-        sobrenome_busca = request.POST.get('sobrenome', '').strip()
 
-        if codigo_busca and sobrenome_busca:
+        if codigo_busca:
             try:
-                reserva = Reserva.objects.get(
-                    codigo=codigo_busca,
-                    cliente__sobrenome__iexact=sobrenome_busca
-                )
+                # Agora buscamos APENAS pelo código da reserva
+                reserva = Reserva.objects.get(codigo=codigo_busca)
             except Reserva.DoesNotExist:
-                erro = "Reserva não encontrada. Verifique o código e o sobrenome."
+                erro = "Reserva não encontrada. Verifique o código digitado."
         else:
-            erro = "Preencha todos os campos."
+            erro = "Por favor, digite o código da sua reserva."
 
     return render(request, 'core/minha_reserva.html', {'reserva': reserva, 'erro': erro})
 
