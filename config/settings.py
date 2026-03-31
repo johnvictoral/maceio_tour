@@ -168,14 +168,14 @@ STATICFILES_DIRS = [
 # MERCADO PAGO
 MERCADO_PAGO_ACCESS_TOKEN = 'APP_USR-641550262322150-093021-7fb6107eb6a4884acf6857b5d5dbf0cc-27923389'
 
-# Configuração de E-mail (Protegida)
+# Configuração de E-mail (Forçada para Marevo)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.hostinger.com'
 EMAIL_PORT = 465
 EMAIL_USE_SSL = True
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = f"Marevo Turismo <{config('EMAIL_HOST_USER')}>"
+EMAIL_HOST_USER = 'contato@marevoturismo.com.br' # Escreva direto aqui
+EMAIL_HOST_PASSWORD = '190382Jvc@' # Escreva direto aqui
+DEFAULT_FROM_EMAIL = 'Marevo Turismo <contato@marevoturismo.com.br>'
 
 
 CKEDITOR_BASEPATH = "/static/ckeditor/ckeditor/"
