@@ -156,8 +156,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_URL = '/admin/login/' # Usando a tela de login do admin do Django, que é mais fácil
 # Mude isso:
-LOGIN_REDIRECT_URL = 'painel_parceiro' # Se o login der certo e não soubermos para onde ir, vai para a Home
-LOGIN_URL = 'login_parceiro' # URL padrão de login
+LOGIN_REDIRECT_URL = '/dashboard/' # Se o login der certo e não soubermos para onde ir, vai para a Home
+LOGIN_URL = '/admin/login/' # URL padrão de login
 LOGOUT_REDIRECT_URL = 'home'
 
 STATIC_URL = 'static/'
