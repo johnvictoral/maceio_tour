@@ -1,0 +1,112 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-04-03 20:19-0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\core\templates\base.html:154
+msgid "Início"
+msgstr "Home"
+
+#: .\core\templates\base.html:155 .\core\templates\base.html:228
+msgid "Passeios"
+msgstr "Tour"
+
+#: .\core\templates\base.html:156
+msgid "Transfers"
+msgstr "Transfers"
+
+#: .\core\templates\base.html:157
+msgid "Tábua de Mares"
+msgstr "Tide Table"
+
+#: .\core\templates\base.html:158
+msgid "Blog"
+msgstr "Blog"
+
+#: .\core\templates\base.html:162 .\core\templates\base.html:230
+msgid "Minha Reserva"
+msgstr "My Booking"
+
+#: .\core\templates\base.html:166
+msgid "Sobre"
+msgstr "About Us"
+
+#: .\core\templates\base.html:167
+msgid "Contato"
+msgstr "Contact"
+
+#: .\core\templates\base.html:191
+msgid "Área Restrita"
+msgstr "Restricted Area"
+
+#: .\core\templates\base.html:211
+msgid ""
+"Especialistas em proporcionar experiências inesquecíveis no litoral "
+"alagoano. Segurança, conforto e pontualidade."
+msgstr ""
+"Specialists in providing unforgettable experiences on the Alagoas coast. "
+"Safety, comfort, and punctuality."
+
+#: .\core\templates\base.html:227
+msgid "Inicio"
+msgstr "WELCOME_TEST"
+
+#: .\core\templates\base.html:229
+msgid "transfers"
+msgstr ""
+
+#: .\core\templates\base.html:232
+msgid "Fale Conosco"
+msgstr "Contact Us"
+
+#: .\core\templates\base.html:239
+msgid "Maragogi"
+msgstr "Maragogi"
+
+#: .\core\templates\base.html:240
+msgid "São M dos Milagres"
+msgstr "São Miguel dos Milagres"
+
+#: .\core\templates\base.html:241
+msgid "Gunga"
+msgstr "Gunga"
+
+#: .\core\templates\base.html:242
+msgid "Francês"
+msgstr "Frances Beach"
+
+#: .\core\templates\base.html:247
+msgid "Atendimento"
+msgstr "Customer Service"
+
+#: .\core\templates\base.html:249
+msgid "Maceió - Alagoas, Brasil"
+msgstr "Maceió - Alagoas, Brazil"
+
+#: .\core\templates\base.html:260
+msgid "Certificado"
+msgstr "Certificate"
+
+#: .\core\templates\base.html:264
+msgid "Registro:"
+msgstr "Registration:"
+
+#~ msgid "Português"
+#~ msgstr "Portuguese"
+
+#~ msgid "English"
+#~ msgstr "English"

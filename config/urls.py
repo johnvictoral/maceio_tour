@@ -6,6 +6,9 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # ADICIONE ESTA LINHA AQUI ABAIXO:
+    path('i18n/', include('django.conf.urls.i18n')),
     
     # O Core cuida do Site e do Blog agora
     path('', include('core.urls')),

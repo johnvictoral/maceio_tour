@@ -1,4 +1,5 @@
 {% load static %}
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -150,38 +151,49 @@
             
             <div class="collapse navbar-collapse" id="main-nav">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
-                    <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Início</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/#passeios">Passeios</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/#transfers-section">Transfers</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'tabua_de_mares' %}">Tábua de Marés</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'lista_de_posts' %}">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">{% translate "Início" %}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/#passeios">{% translate "Passeios" %}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/#transfers-section">{% translate "Transfers" %}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'tabua_de_mares' %}">{% translate "Tábua de Mares" %}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'lista_de_posts' %}">{% translate "Blog" %}</a></li>
                     
                     <li class="nav-item">
                         <a class="nav-link text-primary" href="{% url 'consultar_reserva' %}">
-                            <i class="bi bi-ticket-perforated me-1"></i>Minha Reserva
+                            <i class="bi bi-ticket-perforated me-1"></i>{% translate "Minha Reserva" %}
                         </a>
                     </li>
                     
-                    <li class="nav-item"><a class="nav-link" href="{% url 'sobre_nos' %}">Sobre</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'contato' %}">Contato</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'sobre_nos' %}">{% translate "Sobre" %}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'contato' %}">{% translate "Contato" %}</a></li>
                 </ul>
-                
-                <div class="d-flex gap-2 ms-lg-3 flex-wrap justify-content-center mt-3 mt-lg-0">
-                    
 
+                <form action="{% url 'set_language' %}" method="post" class="d-inline ms-lg-3 my-2 my-lg-0">
+                    {% csrf_token %}
+                    <input name="next" type="hidden" value="{{ request.path }}">
+                    <select name="language" onchange="this.form.submit()" class="form-select form-select-sm d-inline-block w-auto" style="cursor: pointer;">
+                        {% get_current_language as LANGUAGE_CODE %}
+                        {% get_available_languages as LANGUAGES %}
+                        {% for lang in LANGUAGES %}
+                            <option value="{{ lang.0 }}" {% if lang.0 == LANGUAGE_CODE %}selected{% endif %}>
+                                {% if lang.0 == 'pt-br' %}PT-BR 🇧🇷{% else %}EN 🇺🇸{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </form>
+
+                <div class="d-flex gap-2 ms-lg-3 flex-wrap justify-content-center">
                     {% if user.is_authenticated %}
                         <a href="{% url 'painel' %}" class="btn btn-outline-dark btn-sm">
                             <i class="bi bi-speedometer2"></i> Painel
                         </a>
                     {% else %}
                         <a href="{% url 'login' %}" class="btn btn-brand-orange shadow-sm btn-sm px-3">
-                            <i class="bi bi-lock-fill"></i> Área Restrita
+                            <i class="bi bi-lock-fill"></i> {% translate "Área Restrita" %}
                         </a>
                     {% endif %}
                 </div>
             </div>
         </div>
-    </nav>
     </nav>
     {% endblock %}
 
@@ -196,8 +208,7 @@
           <div class="col-lg-3 col-md-6">
             <h5 class="text-uppercase fw-bold text-brand-orange mb-3">Marevo Turismo</h5>
             <p class="small text-white-50">
-                Especialistas em proporcionar experiências inesquecíveis no litoral alagoano. 
-                Segurança, conforto e pontualidade.
+                {% translate "Especialistas em proporcionar experiências inesquecíveis no litoral alagoano. Segurança, conforto e pontualidade." %}
             </p>
             <div class="mt-4">
                 <a href="https://www.instagram.com/marevoturismo/" target="_blank" class="text-white me-3"><i class="bi bi-instagram fs-4"></i></a>
@@ -213,29 +224,29 @@
           <div class="col-lg-2 col-md-6">
             <h5 class="fw-bold mb-3">Menu</h5>
             <ul class="list-unstyled">
-                <li class="mb-2"><a href="{% url 'home' %}" class="text-white-50">Início</a></li>
-                <li class="mb-2"><a href="/#passeios" class="text-white-50">Passeios</a></li>
-                <li class="mb-2"><a href="/#transfers-section" class="text-white-50">Transfers</a></li>
-                <li class="mb-2"><a href="{% url 'consultar_reserva' %}" class="text-white-50">Minha Reserva</a></li>
+                <li class="mb-2"><a href="{% url 'home' %}" class="text-white-50">{% translate "Inicio" %}</a></li>
+                <li class="mb-2"><a href="/#passeios" class="text-white-50">{% translate "Passeios" %}</a></li>
+                <li class="mb-2"><a href="/#transfers-section" class="text-white-50">{% translate "transfers" %}</a></li>
+                <li class="mb-2"><a href="{% url 'consultar_reserva' %}" class="text-white-50">{% translate "Minha Reserva" %}</a></li>
                 <li class="mb-2"><a href="{% url 'login_parceiro' %}" class="text-white fw-bold">Portal do Parceiro</a></li>
-                <li class="mb-2"><a href="{% url 'contato' %}" class="text-white-50">Fale Conosco</a></li>
+                <li class="mb-2"><a href="{% url 'contato' %}" class="text-white-50">{% translate "Fale Conosco" %}</a></li>
             </ul>
           </div>
 
           <div class="col-lg-2 col-md-6">
             <h5 class="fw-bold mb-3">Destinos</h5>
             <ul class="list-unstyled">
-                <li class="mb-2"><a href="#" class="text-white-50">Maragogi</a></li>
-                <li class="mb-2"><a href="#" class="text-white-50">São Miguel</a></li>
-                <li class="mb-2"><a href="#" class="text-white-50">Gunga</a></li>
-                <li class="mb-2"><a href="#" class="text-white-50">Francês</a></li>
+                <li class="mb-2"><a href="#" class="text-white-50">{% translate "Maragogi" %}</a></li>
+                <li class="mb-2"><a href="#" class="text-white-50">{% translate "São M dos Milagres" %}</a></li>
+                <li class="mb-2"><a href="#" class="text-white-50">{% translate "Gunga" %}</a></li>
+                <li class="mb-2"><a href="#" class="text-white-50">{% translate "Francês" %}</a></li>
             </ul>
           </div>
 
           <div class="col-lg-3 col-md-6">
-            <h5 class="fw-bold mb-3">Atendimento</h5>
+            <h5 class="fw-bold mb-3">{% translate "Atendimento" %}</h5>
             <ul class="list-unstyled text-white-50">
-                <li class="mb-3 d-flex"><i class="bi bi-geo-alt-fill text-brand-orange me-2"></i> Maceió - Alagoas, Brasil</li>
+                <li class="mb-3 d-flex"><i class="bi bi-geo-alt-fill text-brand-orange me-2"></i> {% translate "Maceió - Alagoas, Brasil" %}</li>
                 <li class="mb-3 d-flex"><i class="bi bi-envelope-fill text-brand-orange me-2"></i> contato@marevoturismo.com.br</li>
                 <li class="mb-3 d-flex">
                     <a href="tel:+5582999325548" class="text-white-50 text-decoration-none d-flex">
@@ -246,11 +257,11 @@
           </div>
 
           <div class="col-lg-2 col-md-6">
-            <h5 class="fw-bold mb-3">Certificado</h5>
+            <h5 class="fw-bold mb-3">{% translate "Certificado" %}</h5>
             <div class="d-flex flex-column align-items-start">
                 <img src="{% static 'images/logocadastur.png' %}" alt="Cadastur" class="img-fluid mb-3" style="max-width: 140px;">
                 <div>
-                    <small class="d-block text-white-50" style="font-size: 10px;">REGISTRO:</small>
+                    <small class="d-block text-white-50" style="font-size: 10px;">{% translate "Registro:" %}</small>
                     <span class="text-white fw-bold font-monospace" style="font-size: 12px;">33.780.923/0001-62</span>
                 </div>
             </div>
