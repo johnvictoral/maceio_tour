@@ -13,7 +13,7 @@
     
     <a href="https://wa.me/{{ reserva.cliente.telefone|format_whatsapp_number }}?text={% filter urlencode %}Olá, *{{ reserva.cliente.nome }}*! Tudo bem?
 
-Aqui é da *Vá com John*. Segue a confirmação da sua reserva:
+Aqui é da *Marevo Turismo*. Segue a confirmação da sua reserva:
 
 *CONFIRMAÇÃO DE RESERVA*
 
@@ -37,7 +37,7 @@ Aqui é da *Vá com John*. Segue a confirmação da sua reserva:
 {% endif %}
 
 Qualquer dúvida, estou à disposição!
-Acesse: www.vacomjohn.com.br{% endfilter %}" 
+Acesse: www.marevoturismo.com.br{% endfilter %}" 
        target="_blank" class="btn btn-success" title="Confirmar via WhatsApp">
        <i class="bi bi-whatsapp"></i><span class="d-none d-sm-inline ms-1">Confirmar (WhatsApp)</span>
     </a>
@@ -101,28 +101,41 @@ Acesse: www.vacomjohn.com.br{% endfilter %}"
       <div class="tab-pane fade show active" id="reserva-tab-pane" role="tabpanel">
         <div class="row">
           <div class="col-md-6 border-end">
-            <h5 class="mb-3 text-primary fw-bold">Informações do Serviço</h5>
-            <dl class="row">
-              <dt class="col-sm-5">Tipo de Serviço:</dt><dd class="col-sm-7">{{ reserva.get_tipo_display }}</dd>
-              <dt class="col-sm-5">Valor Total:</dt><dd class="col-sm-7 fw-bold text-success">R$ {{ reserva.valor|floatformat:2 }}</dd>
-              <dt class="col-sm-5">Nº de Passageiros:</dt><dd class="col-sm-7">{{ reserva.numero_passageiros }}</dd>
-              {% if reserva.tipo == 'passeio' %}
-                <dt class="col-sm-5">Passeio:</dt><dd class="col-sm-7">{{ reserva.praia_destino.nome }}</dd>
-                <dt class="col-sm-5">Partida:</dt><dd class="col-sm-7">{{ reserva.local_partida }}</dd>
-              {% else %}
-                <dt class="col-sm-5">Trajeto:</dt><dd class="col-sm-7">{{ reserva.local_partida }} → {{ reserva.local_chegada }}</dd>
-                <dt class="col-sm-5">Voo:</dt><dd class="col-sm-7">{{ reserva.informacoes_voo|default:"Não informado" }}</dd>
-              {% endif %}
-              <dt class="col-sm-5">Venda feita por:</dt>
-              <dd class="col-sm-7">
-                  {% if reserva.parceiro %}
-                    <span class="badge bg-info text-dark">Parceiro: {{ reserva.parceiro.usuario.first_name }}</span>
+              <h5 class="mb-3 text-primary fw-bold">Informações do Serviço</h5>
+              <dl class="row">
+                  <dt class="col-sm-5">Tipo de Serviço:</dt><dd class="col-sm-7">{{ reserva.get_tipo_display }}</dd>
+                  <dt class="col-sm-5">Valor Total:</dt><dd class="col-sm-7 fw-bold text-success">R$ {{ reserva.valor|floatformat:2 }}</dd>
+                  <dt class="col-sm-5">Nº de Passageiros:</dt><dd class="col-sm-7">{{ reserva.numero_passageiros }}</dd>
+        
+                  {% if reserva.tipo == 'passeio' %}
+                      <dt class="col-sm-5">Passeio:</dt><dd class="col-sm-7">{{ reserva.praia_destino.nome }}</dd>
+                      <dt class="col-sm-5">Partida:</dt><dd class="col-sm-7">{{ reserva.local_partida }}</dd>
                   {% else %}
-                    <span class="badge bg-light text-dark">Site Direto</span>
+                      <dt class="col-sm-5">Trajeto:</dt><dd class="col-sm-7">{{ reserva.local_partida }} → {{ reserva.local_chegada }}</dd>
+                      <dt class="col-sm-5">Voo:</dt><dd class="col-sm-7">{{ reserva.informacoes_voo|default:"Não informado" }}</dd>
                   {% endif %}
-              </dd>
-            </dl>
-          </div>
+
+                  <dt class="col-sm-5">Venda feita por:</dt>
+                  <dd class="col-sm-7">
+                        {% if reserva.parceiro %}
+                          <span class="badge bg-info text-dark">Parceiro: {{ reserva.parceiro.usuario.first_name }}</span>
+                        {% else %}
+                          <span class="badge bg-light text-dark">Site Direto</span>
+                        {% endif %}
+                  </dd>
+
+                  <hr class="my-3">
+                  <dt class="col-sm-5 text-muted small text-uppercase">Financeiro:</dt>
+                  <dd class="col-sm-7">
+                      <div class="d-grid gap-2">
+                          <button class="btn btn-sm btn-outline-dark text-start" onclick="copyPix()">
+                              <i class="bi bi-clipboard-check me-1"></i> Copiar Chave PIX
+                          </button>
+                      </div>
+                  </dd>
+                </dl>
+      </div>
+
           <div class="col-md-6">
             <h5 class="mb-3 text-primary fw-bold">Informações do Cliente</h5>
             <dl class="row">
@@ -239,4 +252,12 @@ Acesse: www.vacomjohn.com.br{% endfilter %}"
     </form>
   </div>
 </div>
+
+<script>
+        function copyPix() {
+            navigator.clipboard.writeText('82991329099').then(function() {
+                alert('Chave PIX Copiada: 82991329099');
+            });
+        }
+    </script>
 {% endblock %}

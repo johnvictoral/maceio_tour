@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-dn@j09qr-2=6=sa26z_-li*yt$_gr)cxial#an8@#za#zewn9m
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['marevoturismo.com.br', 'www.marevoturismo.com.br', '76.13.236.55', 'vacomjohn.com.br'] 
+ALLOWED_HOSTS = ['marevoturismo.com.br', 'www.marevoturismo.com.br', '76.13.236.55', 'vacomjohn.com.br', '127.0.0.1', 'localhost'] 
 # Ou, se já souber seu usuário: ['seu_usuario.pythonanywhere.com', '127.0.0.1']
 
 
