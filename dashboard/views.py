@@ -485,7 +485,11 @@ def nova_reserva_manual(request):
     # TRAVA DE SEGURANÇA: Se não for administrador, manda para o painel dele
     if not request.user.is_staff:
         return redirect('painel_parceiro')
-    # Verifica se já temos dados de cliente pré-carregados
+    
+    # --- NOVA LINHA: Busca todos os clientes para o buscador do HTML ---
+    todos_clientes = Cliente.objects.all()
+
+    # Verifica se já temos dados de cliente pré-carregados (via URL)
     initial_data = {}
     if 'cliente_id' in request.GET:
         cliente_pre = get_object_or_404(Cliente, id=request.GET.get('cliente_id'))
@@ -501,30 +505,25 @@ def nova_reserva_manual(request):
         if form.is_valid():
             dados = form.cleaned_data
             
-            # --- CORREÇÃO DO ERRO MULTIPLE OBJECTS ---
+            # --- SUA LÓGICA DE CLIENTE (MANTIDA) ---
             email_cliente = dados['email_cliente']
-            
-            # 1. Tenta buscar TODOS os clientes com esse email
             clientes_encontrados = Cliente.objects.filter(email=email_cliente)
             
             if clientes_encontrados.exists():
-                # Se achou 1 ou 13, pega o PRIMEIRO da lista e atualiza
                 cliente_obj = clientes_encontrados.first()
                 cliente_obj.nome = dados['nome_cliente']
                 cliente_obj.sobrenome = dados['sobrenome_cliente']
                 cliente_obj.telefone = dados['telefone_cliente']
                 cliente_obj.save()
             else:
-                # Se não achou ninguém, cria um novo
                 cliente_obj = Cliente.objects.create(
                     email=email_cliente,
                     nome=dados['nome_cliente'],
                     sobrenome=dados['sobrenome_cliente'],
                     telefone=dados['telefone_cliente']
                 )
-            # ------------------------------------------
 
-            # 2. Cria a Reserva (Isso continua igual)
+            # --- SUA LÓGICA DE RESERVA (MANTIDA) ---
             nova_reserva = Reserva(
                 cliente=cliente_obj,
                 tipo=dados['tipo_servico'],
@@ -544,19 +543,18 @@ def nova_reserva_manual(request):
             
             nova_reserva.save()
 
-            # 3. Dispara o E-mail com Voucher (Já que a reserva nasce confirmada)
-            # Se você quiser que envie e-mail ao criar manualmente, descomente a linha abaixo:
-            # disparar_email_confirmacao(request, nova_reserva)
-
             if 'salvar_adicionar' in request.POST:
                 return redirect(f"{reverse('nova_reserva_manual')}?cliente_id={cliente_obj.id}")
             else:
                 return redirect('painel')
-
     else:
         form = ReservaManualForm(initial=initial_data)
 
-    return render(request, 'dashboard/nova_reserva_manual.html', {'form': form})
+    # --- RENDER COM O DICIONÁRIO COMPLETO ---
+    return render(request, 'dashboard/nova_reserva_manual.html', {
+        'form': form,
+        'clientes': todos_clientes  # Isso aqui permite o buscador no HTML funcionar
+    })
 
 @login_required
 def lista_praias(request):

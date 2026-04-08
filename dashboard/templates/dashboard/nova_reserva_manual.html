@@ -6,10 +6,27 @@
     <h5 class="mb-0"><i class="bi bi-plus-circle-fill me-2"></i>Cadastrar Nova Reserva Manual</h5>
   </div>
   <div class="card-body">
-    <form method="POST">
+    <form method="POST" id="form-reserva">
       {% csrf_token %}
       
       <h6 class="text-primary fw-bold mb-3">1. Dados do Cliente</h6>
+
+      <div class="mb-4 p-3 bg-light border rounded shadow-sm" style="border-left: 5px solid #0d6efd;">
+        <label class="form-label fw-bold text-primary">
+            <i class="bi bi-search me-1"></i> Localizar Cliente Já Cadastrado
+        </label>
+        
+        <div class="position-relative">
+            <input type="text" id="buscador_cliente" class="form-control form-control-lg" autocomplete="off" placeholder="Digite o nome do cliente para buscar...">
+            <div id="resultados_busca" class="list-group position-absolute w-100 shadow-lg" style="z-index: 1000; display: none; max-height: 200px; overflow-y: auto;">
+            </div>
+        </div>
+        
+        <div class="form-text mt-2">
+            <span class="badge bg-info text-dark" id="count-badge">{{ clientes|length }} clientes carregados.</span>
+        </div>
+      </div>
+
       <div class="row g-3">
         <div class="col-md-6">
             <label class="form-label">Nome</label>
@@ -91,23 +108,91 @@
 </div>
 
 <script>
-    function toggleCampos() {
-        var tipo = document.getElementById('id_tipo_servico').value;
-        var blocoPasseio = document.getElementById('bloco-passeio');
-        var blocoTransfer = document.getElementById('bloco-transfer');
+    // 1. Dados dos clientes injetados pelo Django
+    const baseClientes = [
+        {% for cliente in clientes %}
+        {
+            "nome_completo": "{{ cliente.nome|escapejs }} {{ cliente.sobrenome|escapejs }}",
+            "nome": "{{ cliente.nome|escapejs }}",
+            "sobrenome": "{{ cliente.sobrenome|escapejs }}",
+            "email": "{{ cliente.email|escapejs }}",
+            "telefone": "{{ cliente.telefone|escapejs }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
 
-        if (tipo === 'passeio') {
-            blocoPasseio.style.display = 'block';
-            blocoTransfer.style.display = 'none';
+    const buscador = document.getElementById('buscador_cliente');
+    const listaResultados = document.getElementById('resultados_busca');
+
+    // 2. Lógica de busca customizada (Filtra enquanto digita)
+    buscador.addEventListener('input', function() {
+        const termo = this.value.toLowerCase();
+        listaResultados.innerHTML = '';
+        
+        if (termo.length < 2) {
+            listaResultados.style.display = 'none';
+            return;
+        }
+
+        const filtrados = baseClientes.filter(c => 
+            c.nome_completo.toLowerCase().includes(termo) || 
+            c.telefone.includes(termo)
+        );
+
+        if (filtrados.length > 0) {
+            filtrados.forEach(cliente => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'list-group-item list-group-item-action';
+                item.innerHTML = `<strong>${cliente.nome_completo}</strong> <br> <small>${cliente.telefone} | ${cliente.email}</small>`;
+                
+                item.onclick = function() {
+                    preencherCampos(cliente);
+                };
+                listaResultados.appendChild(item);
+            });
+            listaResultados.style.display = 'block';
         } else {
-            blocoPasseio.style.display = 'none';
-            blocoTransfer.style.display = 'block';
+            listaResultados.style.display = 'none';
+        }
+    });
+
+    // 3. Função para preencher os campos
+    function preencherCampos(cliente) {
+        document.getElementById('id_nome_cliente').value = cliente.nome;
+        document.getElementById('id_sobrenome_cliente').value = cliente.sobrenome;
+        document.getElementById('id_email_cliente').value = cliente.email;
+        document.getElementById('id_telefone_cliente').value = cliente.telefone;
+        
+        buscador.value = cliente.nome_completo;
+        listaResultados.style.display = 'none';
+        buscador.classList.add('is-valid');
+    }
+
+    // Fechar lista ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (e.target !== buscador) {
+            listaResultados.style.display = 'none';
+        }
+    });
+
+    // Função original de alternar campos
+    function toggleCampos() {
+        const tipoField = document.getElementById('id_tipo_servico');
+        const blocoPasseio = document.getElementById('bloco-passeio');
+        const blocoTransfer = document.getElementById('bloco-transfer');
+
+        if (tipoField && blocoPasseio && blocoTransfer) {
+            const tipo = tipoField.value;
+            blocoPasseio.style.display = (tipo === 'passeio') ? 'block' : 'none';
+            blocoTransfer.style.display = (tipo === 'transfer') ? 'block' : 'none';
         }
     }
 
-    // Roda a função ao carregar a página para garantir o estado correto
     document.addEventListener('DOMContentLoaded', function() {
         toggleCampos();
+        const tipoSelect = document.getElementById('id_tipo_servico');
+        if (tipoSelect) tipoSelect.addEventListener('change', toggleCampos);
     });
 </script>
 {% endblock %}
