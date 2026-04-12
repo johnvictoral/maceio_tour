@@ -214,8 +214,14 @@
         </div>
         {% endif %}
 
+        <div class="section-header">4. Informações de Voo / Observações</div>
+        <div style="padding: 10px; border: 1px solid #eee; background-color: #f9f9f9; border-radius: 4px; min-height: 40px;">
+            <span class="value" style="font-style: italic; line-height: 1.4;">
+                {{ reserva.informacoes_voo|default:"Nenhuma observação adicional para esta reserva." }}
+            </span>
+        </div>
 
-        <div class="section-header">4. Validação</div>
+        <div class="section-header">5. Validação</div>
         
         <table style="margin-top: 10px;">
             <tr>
@@ -242,7 +248,7 @@
     </div>
 
     <div class="footer-bar">
-        Marevo Turismo • www.vacomjohn.com.br • (82) 99932-5548 • Maceió/AL • Consulte sua reserva online: vacomjohn.com.br/minha-reserva
+        Marevo Turismo • www.marevoturismo.com.br • (82) 99932-5548 • Maceió/AL • Consulte sua reserva online: marevoturismo.com.br/minha-reserva
     </div>
 
 </body>
