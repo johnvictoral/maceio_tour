@@ -30,12 +30,14 @@
             R$ {{ praia.valor|floatformat:2 }}
           </h2>
           <div class="d-grid">
-            <a href="{% url 'fazer_reserva_passeio' praia_id=praia.id %}" class="btn btn-primary btn-lg rounded-pill shadow">
-    Reservar Agora
-</a>
+            <a href="https://wa.me/5582999325548?text=Olá Marevo Turismo! Gostaria de reservar o passeio para {{ praia.nome }} no valor de R$ {{ praia.valor|floatformat:2 }}. Pode me passar mais informações?" 
+               target="_blank" 
+               class="btn btn-success btn-lg rounded-pill shadow">
+                <i class="bi bi-whatsapp me-2"></i>Reservar Agora
+            </a>
           </div>
+          <small class="text-muted mt-2 d-block">Fale direto com nosso atendimento</small>
         </div>
-      </div>
 
       <h4 class="mt-4">Outros Passeios</h4>
       <div class="list-group">
